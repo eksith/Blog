@@ -8,7 +8,7 @@ class Dispatcher {
 	
 	public function __construct() { }
 	
-	public function has( $scope, $event == null ) {
+	public function has( $scope, $event = null ) {
 		if ( !isset( $this->events[$scope] ) ) {
 			return false;
 		}
