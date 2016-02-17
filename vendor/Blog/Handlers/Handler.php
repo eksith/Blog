@@ -4,6 +4,18 @@ namespace Blog\Handlers;
 use Blog\Events;
 
 class Handler extends Events\Listener {
+	
+	private static $filter;
+	
+	protected function getFilter() {
+		if ( !isset( self::$filter ) ) {
+			self::$filter = new \Blog\Filter();
+		}
+		
+		return self::$filter;
+	}
+	
+	// https://paragonie.com/blog/2015/06/preventing-xss-vulnerabilities-in-php-everything-you-need-know
 
 	/**
 	 * Checks if current connection is secure
@@ -53,7 +65,9 @@ class Handler extends Events\Listener {
 	 */
 	protected function finish( $flush = true ) {
 		if ( $flush ) {
-			if ( function_exists( 'fastcgi_finish_request' ) ) {
+			if ( function_exists( 
+				'fastcgi_finish_request' 
+			) ) {
 				fastcgi_finish_request();
 			}
 			flush();
@@ -83,12 +97,12 @@ class Handler extends Events\Listener {
 		
 		// Check for possible attack vectors
 		$path	= filter_var( trim( $path ), 
-				FILTER_SANITIZE_URL );
+				\FILTER_SANITIZE_URL );
 		if (
 			empty( $path ) || 
 			false !== strpos( $path, '://' ) 
 		) {
-			die(); 
+			$this->finish( false ); 
 		}
 		
 		$status	= array( 200, 201, 202, 203, 204, 205, 300, 301, 
@@ -104,172 +118,103 @@ class Handler extends Events\Listener {
 		$this->finish( false );
 	}
 	
-	/**
-	 * Creates a URL safe short code based on numeric id
-	 * 
-	 * @param int|string $k Key code or numeric id
-	 * @param bool $create Creates a short code if true, decodes 
-	 * 		if false
-	 * @return int|string The original decoded id or a short code
-	 */
-	protected function urlCode(
-		$k, 
-		$create	= false 
-	) {
-		$r = 
-		str_split( 
-		'3456789abcdefghkmnpqrstuvwxyzABCDEFGHIJKLMNPQRSTUVWXYZ' 
-		);
-		$l = strlen( $k );
-		$c = 54;
-		
-		if ( $create ) {
-			do {
-				$k = $this->rnum( 10, 99 ) . $k . '.0';
-				$o = '';
-				$c = bcmod( $k, $l );
-				$o = $r[$c];
-				$k = bcdiv( bcsub( $k, $c ), $l );
-			} while ( bccomp( $k, 0 ) > 0 );
-			
-			return strrev( $o );
-		}
-		
-		$o = 0;
-		$a = array_flip( $r );
-		for( $i = 0; $i < $l; $i++ ) {
-			$c = $k[$i];
-			$n = bcpow( $c, $l - $i - 1 );
-			$o = bcadd( $o, bcmul( $a[$c], $n ) );
-		}
-		return substr( $o, 2 );
-	}
-	
-	
-	/**
-	 * mt_rand Wrapper that fixes some anomalies
-	 *
-	 * @return int Pseudo-random number (unsafe for crypto!)
-	 */
-	public function rnum( $min, $max ) {
-		$num = 0;
-		while ( $num < $min || $num > $max || null == $num ) {
-			$num = mt_rand( $min, $max );
-		}
-		return $num;
-	}
-	
-	
 	/* Utilities */
 	
+	protected function csrf( Events\Event $event, $form ) {
+		$key	= $form . '_csrf';
+		$csrf	= $event->get( $key );
+		
+		if ( !empty( $csrf ) ) {
+			return $csrf;
+		}
+		
+		$xss	= filter_input( 
+				\INPUT_POST, 
+				'csrf', 
+				\FILTER_SANITIZE_FULL_SPECIAL_CHARS 
+			);
+		
+		$csrf	= $this->verifyXSS( $form, $xss );
+		$event->set( $key, $csrf );
+		
+		return $csrf;
+	}
+	
+	protected function genXSS( $form ) {
+		return $this->crypto()->genPbk( 
+			CXX_HASH, 
+			$form . session_id(), 
+			bin2hex( $this->crypto()->bytes( CXX_SIZE ) ), 
+			CXX_ROUNDS 
+		);
+	}
+	
+	protected function verifyXSS( $form, $xss ) {
+		if ( empty( $xss ) || mb_strlen( $xss, '8bit' ) > 200 ) {
+			return false;
+		}
+		return $this->crypto()->verifyPbk( 
+				$form . session_id(), $xss 
+			);
+	}
+	
+	protected function saveCookie( $name, $data, $key ) {
+		$data	= base64_encode( $data );
+		$cookie	= $this->crypto()->encrypt( $data, $key );
+		$hash	= $this->crypto()->genPbk( 
+				COOKIE_CHECKSUM, $data 
+			);
+		
+		return setcookie( 
+			$name, 
+			$hash . '|' . $cookie, 
+			time() + COOKIE_TIME, 
+			COOKIE_PATH, 
+			COOKIE_SECURE, 
+			true 
+		);
+	}
+	
 	/**
-	 * Sanitized cookie by name and maximum size
+	 * Sanitized cookie by name and maximum content size
 	 */
-	protected function getCookie( $name, $max = 1000 ) {
+	protected function getCookie( $name, $key, $max = 2045 ) {
 		if ( !isset( $_COOKIE[$name] ) ) {
 			return false;
 		}
-		$data	= $_COOKIE[$name];
 		
-		if ( mb_strlen( $data ) > $max || empty( $data ) ) {
+		if (
+			empty( $_COOKIE[$name] )			|| 
+			mb_strlen( $_COOKIE[$name], '8bit' ) > $max	|| 
+			strrpos( $_COOKIE[$name], '|' ) === false
+		) {
 			return false;
 		}
 		
-		$data	= base64_decode( $data, true );
-		if ( false === $data ) {
+		$data	= explode( '|', $_COOKIE[$name], 2 );
+		if ( count( $data ) != 2 ) {
 			return false;
 		}
 		
-		return filter_var(
-				$data, 
-				FILTER_SANITIZE_SPECIAL_CHARS | 
-				FILTER_FLAG_STRIP_HIGH
-			);
+		$cookie	= $this->crypto()->decrypt( $data[1], $key );
+		if ( $this->crypto()->verifyPbk( $cookie, $data[0] ) ) {
+			return base64_decode( $cookie, true );
+		}
+		
+		return false;
 	}
 	
 	/**
-	 * Encode and save cookie
+	 * Create a URL based on the name and date
+	 * @example /2015/02/26/name
 	 */
-	protected function saveCookie( $data, $name ) {
-		$cookie	= base64_encode( $data );
-		return setcookie( $name, $cookie, COOKIE_TIME, '/' );
-	}
-	
-	/**
-	 * PBK Hash derivation (do not use this implementation for passwords!)
-	 */
-	protected function pbk(
-		$algo, 
-		$txt,
-		$salt,
-		$rounds, 
-		$kl
+	protected function datePath( 
+		$name, 
+		$time	= null 
 	) {
-		if ( function_exists( 'hash_pbkdf2' ) ) {
-			return hash_pbkdf2( 
-				$algo, $txt, $salt, $rounds, $kl 
-			);
-		}
-		
-		$hl	= strlen( hash( $algo, '', true ) );
-		$bl	= ceil( $kl / $hl );
-		$out	= '';
-		
-		for ( $i = 1; $i <= $bl; $i++ ) {
-			$l = $salt . pack( 'N', $i );
-			$l = $x = hash_hmac( $algo, $l, $txt, true );
-			for ( $j = 1; $l < $rounds; $j++ ) {
-				$x ^= ( $l = 
-				hash_hmac( $algo, $l, $txt, true ) );
-			}
-			$out .= $x;
-		}
-		
-		return bin2hex( substr( $out, 0, $kl ) );
-	}
-
-	protected function genPbk(
-		$algo	= 'tiger160,4', 
-		$txt,
-		$salt	= null,
-		$rounds	= 1000, 
-		$kl	= 128 
-	) {
-		$rounds	= ( $rounds <= 0 ) ? 1000 : $rounds;
-		$kl	= ( $kl <= 0 ) ? 128 : $kl;
-		$salt	= empty( $salt ) ? 
-				$this->rnd( CXX_SALT ) : $salt;
-				
-		$key	= $this->pbk( $algo,$txt, $salt, $rounds, $kl );
-		$out	= array(
-				$algo, $txt, $salt, $rounds, $kl
-			);
-		return base64_encode( implode( '$', $out ) );
-	}
-	
-	function verifyPbk( $txt, $hash ) {
-		$key	= base64_decode( $hash );
-		$k	= explode( '$', $key );
-		
-		if ( empty( $k ) || empty( $txt ) ) {
-			return false;
-		}
-		if ( count( $k ) != 5 ) {
-			return false;
-		}
-		
-		if ( !in_array( $algorithm, hash_algos() , true ) ) {
-			return false;
-		}
-		$pbk = $this->pbk( $k[0], $txt, 
-				( int ) $k[2], $k[3], $k[4] );
-		
-		return ( strcmp( $key, $pbk ) === 0 );
-	}
-	
-	function rnd( $size ) {
-		return mcrypt_create_iv( $size, MCRYPT_DEV_URANDOM );
+		$p = ( null == $time ) ? 
+			date( 'Y/m/d' ) : date( 'Y/m/d', $time );
+		return $p . '/' . $name;
 	}
 }
-
 
