@@ -1,6 +1,6 @@
 <?php
 
-namespace Blog\Core\Events;
+namespace Blog\Events;
 use Blog\Models;
 use Blog\Core;
 
@@ -14,7 +14,7 @@ class Dispatcher {
 	
 	public function __construct( Core\Request $request ) {
 		$this->request	= $request;
-		$this->config	= new Core\Config( $this->crypto() );
+		$this->config	= new Core\Config( $this->getCrypto() );
 		
 		Models\Model::setConfig( $this->config );
 		Models\Model::setCrypto( $this->getCrypto() );
