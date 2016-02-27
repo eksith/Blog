@@ -1,50 +1,65 @@
 <?php
 
-namespace Blog\Events;
+namespace Blog\Core\Events;
 
 class Event implements \SplSubject {
 	
-	private $properties	= array();
-	private $block		= false;
-	private $listeners;
-	private $name;
+	private $rules;
+	private	$name;
+	private $handlers;
+	private $dispatcher;
 	
-	public function __construct( $name ) {
+	public function __construct( $name, Dispatcher $dispatcher ) {
 		$this->name		= $name;
-		$this->listeners	= new \SplObjectStorage();
+		$this->dispatcher	= $dispatcher;
+		$this->handlers		= new \SplObjectStorage();
+	}
+	
+	public function getRequest() {
+		return $this->dispatcher->getRequest();
+	}
+	
+	public function has( \SplObserver $handler ) {
+		return $this->handlers->contains( $handler );
+	}
+	
+	
+	public function set( $key, $value ) {
+		$this->data[$key] = $value;
+	}
+	
+	public function get( $key ) {
+		return isset( $this->data[$key] ) ?
+			$this->data[$key] : null;
+	}
+	
+	public function setRules( $rule ) {
+		$this->rules[$this->name] = $rule;
+	}
+	
+	public function getRules() {
+		return isset( $this->rules ) ? $this->rules : array();
 	}
 	
 	public function getName() {
 		return $this->name;
 	}
 	
-	public function set( $property, $value = null ) {
-		$this->properties[$property] = $value;
-	}
-	
-	public function get( $property ) {
-		return isset( $this->properties[$property] ) ? 
-			$this->properties[$property] : null;
-	}
-	
-	public function attach( \SplObserver $listener ) {
-		if ( $this->block ) {
-			return;
-		}
-		if ( !$this->listeners->contains( $listener ) ) {
-			$this->listeners->attach( $listener );
+	public function attach( \SplObserver $handler ) {
+		if ( !$this->has( $handler ) ) {
+			$this->handlers->attach( $handler );
 		}
 	}
 	
-	public function detach( \SplObserver $lisetner ) {
-		if ( $this->listeners->contains( $listener ) ) {
-			$this->listeners->detach( $listener );
+	public function detach( \SplObserver $handler ) {
+		if ( $this->has( $handler ) ) {
+			$this->handlers->detach( $handler );
 		}
 	}
 	
 	public function notify() {
-		foreach ( $this->listeners as $listener ) {
-			$listener->update( $this );
+		foreach( $this->handlers as $handler ) {
+			$handler->update( $this );
 		}
 	}
 }

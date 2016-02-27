@@ -1,107 +1,108 @@
 <?php
 
-namespace Blog\Events;
+namespace Blog\Core\Events;
+use Blog\Models;
+use Blog\Core;
 
 class Dispatcher {
 	
-	private $events = array();
+	private static $queue;
+	private static $crypto;
+	private $events		= array();
+	private $config;
+	private $request;
 	
-	public function __construct() { }
+	public function __construct( Core\Request $request ) {
+		$this->request	= $request;
+		$this->config	= new Core\Config( $this->crypto() );
+		
+		Models\Model::setConfig( $this->config );
+		Models\Model::setCrypto( $this->crypto() );
+	}
 	
-	public function has( $scope, $event = null ) {
-		if ( !isset( $this->events[$scope] ) ) {
+	public function getRequest() {
+		return $this->request;
+	}
+	
+	public function getConfig() {
+		return $this->config;
+	}
+	
+	public function has( $name, Event $event ) {
+		if ( !isset( $this->events[$name] ) ) {
 			return false;
 		}
+		
 		if ( empty( $event ) ) {
 			return true;
 		}
-		if ( $this->events[$scope]->contains( $event ) ) {
-			return true;
-		}
-		return false;
+		
+		return $this->events[$name]->contains( $event );
 	}
 	
-	public function set( $scope, $name, $value ) {
-		if ( !$this->has( $scope ) ) {
+	public function set( $name, $name, $value ) {
+		if ( !$this->has( $name ) ) {
 			return;
 		}
-		foreach ( $this->events[$scope] as $event ) {
+		foreach ( $this->events[$name] as $event ) {
 			$event->set( $name, $value );
 		}
 	}
 	
 	public function add() {
 		$args	= func_get_args();
-		$scope	= array_shift( $args );
+		$name	= array_shift( $args );
 		
-		if ( !$this->has( $scope ) ) {
-			$this->events[$scope] = new \SplObjectStorage();
+		if ( !$this->has( $name ) ) {
+			$this->events[$name] = new \SplObjectStorage();
 		}
-		
-		foreach( $args as $event ) {
-			if ( !$this->has( $scope, $event ) ) {
-				$this->events[$scope]->attach( $event );
-			}
-		}
-	}
-	
-	public function remove() {
-		$args	= func_get_args();
-		$scope	= array_shift( $args );
 		
 		foreach( $args as $event ) {
-			if ( $this->has( $scope, $event ) ) {
-				$this->events[$scope]->detach( $event );
+			$this->attach( $name, $event );
+		}
+	}
+	
+	public function attach( $name, Event $event ) {
+		if ( !isset( $this->events[$name] ) ) {
+			$this->events[$name]	= 
+				new \SplObjectStorage();
+		}
+		if ( !$this->has( $name, $event ) ) {
+			$this->events[$name]->attach( $event );
+		}
+	}
+	
+	public function detach( $name, Event $event ) {
+		if ( isset( $this->events[$name] ) ) {
+			if ( $this->has( $name, $event ) ) {
+				$this->events[$name]->detach( $event );
 			}
 		}
 	}
 	
-	public function attach() {
-		$args	= func_get_args();
-		$scope	= array_shift( $args );
-		
-		if ( !$this->has( $scope ) ) {
+	public function dispatch( $name ) {
+		if ( !isset( $this->events[$name] ) ) {
 			return;
 		}
-		foreach ( $this->events[$scope] as $event ) {
-			foreach( $args as $handler ) {
-				$event->attach( $handler );
-			}
-		}
-	}
-	
-	public function detach() {
-		$args	= func_get_args();
-		$scope	= array_shift( $args );
-		if ( !$this->has( $scope ) ) {
-			return;
-		}
-		foreach ( $this->events[$scope] as $event ) {
-			foreach( $args as $handler ) {
-				$event->detach( $handler );
-			}
-		}
-	}
-	
-	public function dispatch() {
-		$args	= func_get_args();
-		
-		foreach( $args as $scope ) {
-			$this->run( $scope );
-		}
-	}
-	
-	private hasScope( $scope ) {
-		return isset( $this->events[$scope] );
-	}
-	
-	private function run( $scope ) {
-		if ( !isset( $this->events[$scope] ) ) {
-			return;
-		}
-		
-		foreach ( $this->events[$scope] as $event ) {
+		foreach( $this->events[$name] as $event ) {
 			$event->notify();
 		}
 	}
+	
+	public function crypto() {
+		if ( !isset( self::$crypto ) ) {
+			self::$crypto = new Core\Crypto();
+		}
+		
+		return self::$crypto;
+	}
+	
+	public function defer() {
+		if ( !isset( self::$queue ) ) {
+			self::$queue = new Queue();
+		}
+		
+		self::$queue->schedule( func_get_args() );
+	}
 }
+
