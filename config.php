@@ -7,9 +7,9 @@ define( 'CONFIG', <<<JSON
 {
 	"version"		: "0.01",
 	
-	"content_store"		: "sqlite:data\\\content.sqlite",
-	"session_store"		: "sqlite:data\\\sessions.sqlite",
-	"cache_store"		: "sqlite:data\\\cache.sqlite",
+	"content_store"		: "sqlite:data\/content.sqlite",
+	"session_store"		: "sqlite:data\/sessions.sqlite",
+	"cache_store"		: "sqlite:data\/cache.sqlite",
 	
 	"theme_path"		: "|PATH|themes\/",
 	"theme_display"		: "\/themes\/",
@@ -43,7 +43,6 @@ define( 'CONFIG', <<<JSON
 	
 	"user_hash"		: "ripemd128",
 	"user_hash_size"	: 32,
-	"user_token_salt"	: "VYw|<}NijjnT&#WYKA}=`h=ymFr:1l|s3Cr;|<hVuKk^I#0I]ke$~+Yg_^EZrMY*",
 	
 	"field_hash"		: "tiger128,3",
 	"signature_hash"	: "tiger160,4",
