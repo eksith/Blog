@@ -30,6 +30,10 @@ class Listener implements \SplObserver {
 				->getSetting( $setting );
 	}
 	
+	protected function getCrypto() {
+		return $this->dispatcher->getCrypto();
+	}
+	
 	public function update( \SplSubject $event ) {
 		$name = $event->getName();
 		if ( method_exists( $this, $name ) ) {
