@@ -10,6 +10,7 @@ class Request extends Message
 	protected $uri;
 	protected $sent_headers;
 	private $ip;
+	private $browser;
 	private $rawsig;
 	private $sig;
 	
@@ -67,6 +68,10 @@ class Request extends Message
 			return $this->rawsig;
 		} 
 		return $this->sig;
+	}
+	
+	public function getBrowserProfile() {
+		return $this->browser;
 	}
 	
 	public function withMethod( $method ) {
@@ -139,8 +144,11 @@ class Request extends Message
 	}
 	
 	private function signature() {
-		$sig		= new BrowserSignature();
-		$this->sig	= $sig->getSingature();
-		$this->rawsig	= $sig->getSingature( true );
+		if ( !isset( $this->browser ) ) {
+			$this->browser = new BrowserProfile();
+		}
+		
+		$this->sig	= $this->sigobject->getSingature();
+		$this->rawsig	= $this->sigobject->getSingature( true );
 	}
 }
