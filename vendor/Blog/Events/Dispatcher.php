@@ -17,7 +17,7 @@ class Dispatcher {
 		$this->config	= new Core\Config( $this->crypto() );
 		
 		Models\Model::setConfig( $this->config );
-		Models\Model::setCrypto( $this->crypto() );
+		Models\Model::setCrypto( $this->getCrypto() );
 	}
 	
 	public function getRequest() {
@@ -89,7 +89,7 @@ class Dispatcher {
 		}
 	}
 	
-	public function crypto() {
+	public function getCrypto() {
 		if ( !isset( self::$crypto ) ) {
 			self::$crypto = new Core\Crypto();
 		}
