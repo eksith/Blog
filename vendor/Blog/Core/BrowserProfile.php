@@ -196,7 +196,7 @@ class BrowserProfile {
 	public function __construct() {
 		$sent	= array_intersect_key( 
 				$_SERVER, 
-				array_flip( $markers )
+				array_flip( $this->markers )
 			);
 		$out	= implode( ' ', array_values( $sent ) );
 		$this->rawsig	= $out;
