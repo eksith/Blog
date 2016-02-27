@@ -1,6 +1,6 @@
 <?php
 
-namespace Blog\Core\Events;
+namespace Blog\Events;
 
 class Listener implements \SplObserver {
 	
