@@ -2,7 +2,7 @@
 
 namespace Blog\Core;
 
-class BrowserSignature {
+class BrowserProfile {
 	
 	private $browser;
 	private $rawsig;
