@@ -3,7 +3,6 @@
 define( 'PATH',			\realpath( \dirname( __FILE__ ) ) . '/' );
 define( 'PKGS',			PATH . 'vendor/' );
 
-
 define( 'CONFIG', <<<JSON
 {
 	"version"		: "0.01",
@@ -52,7 +51,7 @@ define( 'CONFIG', <<<JSON
 	"csrf_hash"		: "tiger128,3",
 	"csrf_size"		: 16,
 	"csrf_salt"		: 4,
-	"csrf_rounds"		: 100,
+	"csrf_rounds"		: 1000,
 	
 	"post_status_buried"	: -1,
 	"post_status_open"	: 0,
