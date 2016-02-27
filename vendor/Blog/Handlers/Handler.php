@@ -2,63 +2,38 @@
 
 namespace Blog\Handlers;
 use Blog\Events;
+use Blog\Core;
 
 class Handler extends Events\Listener {
 	
-	private static $filter;
+	private static $cache	= array();
+	private static $isAjax;
+	private static $headers;
+	private static $html_filter;
 	
-	protected function getFilter() {
-		if ( !isset( self::$filter ) ) {
-			self::$filter = new \Blog\Filter();
+	protected function getHtmlFilter() {
+		if ( !isset( self::$html_filter ) ) {
+			self::$html_filter = new Core\HtmlFilter();
 		}
 		
-		return self::$filter;
+		return self::$html_filter;
 	}
 	
-	// https://paragonie.com/blog/2015/06/preventing-xss-vulnerabilities-in-php-everything-you-need-know
-
-	/**
-	 * Checks if current connection is secure
-	 *
-	 * @return bool True if secure; false if not
-	 */
-	protected function is_https() {
-		return ( 
-			!empty($_SERVER['HTTPS'] )		&& 
-			$_SERVER['HTTPS']	!== 'off'	|| 
-			$_SERVER['SERVER_PORT']	== 443 
-		) ? true : false;
+	protected function setCache( $key, $data ) {
+		self::$cache[$key]	= $data;
 	}
 	
-	/**
-	 * Checks connection port
-	 *
-	 * @return int
-	 */
-	protected function port() {
-		return $_SERVER['SERVER_PORT'];
-	}
-	
-	/**
-	 * Base request URL path including protocol and path
-	 *
-	 * @return string Full URL base
-	 */
-	protected function baseURL() {
-		$host	= $_SERVER['SERVER_NAME'];
-		$proto	= $this->is_https() ? 'https' : 'http';
-		$port	= $this->port();
-		
-		if ( $port != '80' || $port != '443' ) {
-			return "$proto://$host:$port";
+	protected function decode( $txt, $max = 200 ) {
+		if ( mb_strlen( $txt, '8bit' ) > $max ) {
+			return false;
 		}
-		return "$proto://$host";
+		
+		return base64_decode( $txt, true );
 	}
 	
 	/**
 	 * Shutdown event helper.
 	 * Finish the request and optionally send the output buffer.
-	 * Calls the 'end' events from the dispatcher if any.
 	 * 
 	 * @param bool $flush If true, prevents any content from being 
 	 * 		sent to the user
@@ -81,96 +56,43 @@ class Handler extends Events\Listener {
 	}
 	
 	/**
-	 * Safely redirect to another URL in the same domain with 
-	 * optional status code
-	 * 
-	 * @param string $path URL without 'http://' etc...
-	 * @param int $code Redirect code
+	 * Check for AJAX header
 	 */
-	protected function redirect( 
-		$path, 
-		$code	= 302 
-	) {
-		if ( headers_sent() ) {
-			$this->finish( false );
+	protected function isAjax( $re ) {
+		if ( isset( self::$isAjax ) ) {
+			return self::$isAjax ;
 		}
+		$re	= $this->getRequest()
+				->getHeader( 'X-Requested-With' );
+		$isAjax	= false;
 		
-		// Check for possible attack vectors
-		$path	= filter_var( trim( $path ), 
-				\FILTER_SANITIZE_URL );
-		if (
-			empty( $path ) || 
-			false !== strpos( $path, '://' ) 
-		) {
-			$this->finish( false ); 
-		}
-		
-		$status	= array( 200, 201, 202, 203, 204, 205, 300, 301, 
-			302, 303, 304 );
-		if ( in_array( $code, $status ) ) {
-			$code = 302;
-		}
-	
-		$url	= $this->baseURL();
-		$path	= ltrim( $path, '/\\' );
-		
-		header( "Location: $url/$path", true, $code );
-		$this->finish( false );
-	}
-	
-	/* Utilities */
-	
-	protected function csrf( Events\Event $event, $form ) {
-		$key	= $form . '_csrf';
-		$csrf	= $event->get( $key );
-		
-		if ( !empty( $csrf ) ) {
-			return $csrf;
-		}
-		
-		$xss	= filter_input( 
-				\INPUT_POST, 
-				'csrf', 
-				\FILTER_SANITIZE_FULL_SPECIAL_CHARS 
-			);
-		
-		$csrf	= $this->verifyXSS( $form, $xss );
-		$event->set( $key, $csrf );
-		
-		return $csrf;
-	}
-	
-	protected function genXSS( $form ) {
-		return $this->crypto()->genPbk( 
-			CXX_HASH, 
-			$form . session_id(), 
-			bin2hex( $this->crypto()->bytes( CXX_SIZE ) ), 
-			CXX_ROUNDS 
-		);
-	}
-	
-	protected function verifyXSS( $form, $xss ) {
-		if ( empty( $xss ) || mb_strlen( $xss, '8bit' ) > 200 ) {
+		if ( empty( $re ) ) {
 			return false;
 		}
-		return $this->crypto()->verifyPbk( 
-				$form . session_id(), $xss 
-			);
+		if ( 'xmlhttprequest' == strtolower( $re[0] ) ) {
+			$isAjax = true;
+		}
+		self::$isAjax = $isAjax;
+		return $isAjax;
 	}
 	
 	protected function saveCookie( $name, $data, $key ) {
 		$data	= base64_encode( $data );
-		$cookie	= $this->crypto()->encrypt( $data, $key );
-		$hash	= $this->crypto()->genPbk( 
-				COOKIE_CHECKSUM, $data 
+		$crypto	= $this->getCrypto();
+		$config = $this->dispatcher->getConfig();
+		
+		$cookie	= $crypto->encrypt( $data, $key );
+		$hash	= $crypto->genPbk( 
+				$config->getSetting( 'cookie_hash' ), 
+				$data 
 			);
 		
 		return setcookie( 
 			$name, 
 			$hash . '|' . $cookie, 
-			time() + COOKIE_TIME, 
-			COOKIE_PATH, 
-			COOKIE_SECURE, 
+			time() + $config->getSetting( 'cookie_time' ), 
+			$config->getSetting( 'cookie_path' ), 
+			$config->getSetting( 'cookie_secure' ), 
 			true 
 		);
 	}
@@ -196,8 +118,10 @@ class Handler extends Events\Listener {
 			return false;
 		}
 		
-		$cookie	= $this->crypto()->decrypt( $data[1], $key );
-		if ( $this->crypto()->verifyPbk( $cookie, $data[0] ) ) {
+		$cookie	= $this->getCrypto()->decrypt( $data[1], $key );
+		if ( $this->getCrypto()->verifyPbk( 
+			$cookie, $data[0] 
+		) ) {
 			return base64_decode( $cookie, true );
 		}
 		
@@ -205,16 +129,41 @@ class Handler extends Events\Listener {
 	}
 	
 	/**
-	 * Create a URL based on the name and date
-	 * @example /2015/02/26/name
+	 * Anti-XSS request token generator
 	 */
-	protected function datePath( 
-		$name, 
-		$time	= null 
+	protected function genCsrf( $form, Events\Event $event ) {
+		$session	= $event->get( 'session_id' );
+		$sig		= $this->getSignature();
+		$crypto		= $this->getCrypto();
+		
+		$algo		= $this->getSetting( 'csrf_hash' );
+		$rounds		= $this->getSetting( 'csrf_rounds' );
+		$size		= $this->getSetting( 'csrf_size' );
+		$salt		= $this->getSetting( 'csrf_salt' );
+		
+		return $crypto->genPbk(
+			$algo,
+			$form . $session . $sig,
+			$crypto->bytes( $salt ),
+			$rounds,
+			$size 
+		);
+	}
+	
+	/**
+	 * Verify anti-XSS request token against user profile
+	 */
+	protected function verifyCsrf(
+		$hash,
+		$form,
+		Events\Event $event
 	) {
-		$p = ( null == $time ) ? 
-			date( 'Y/m/d' ) : date( 'Y/m/d', $time );
-		return $p . '/' . $name;
+		$session	= $event->get( 'session_id' );
+		$sig		= $this->getSignature();
+		
+		return $this->getCrypto()->verifyPbk(
+			$form. $session . $sig, 
+			$hash
+		);
 	}
 }
-
