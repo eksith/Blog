@@ -148,7 +148,7 @@ class Request extends Message
 			$this->browser = new BrowserProfile();
 		}
 		
-		$this->sig	= $this->sigobject->getSingature();
-		$this->rawsig	= $this->sigobject->getSingature( true );
+		$this->sig	= $this->browser->getSignature();
+		$this->rawsig	= $this->browser->getSignature( true );
 	}
 }
