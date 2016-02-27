@@ -155,7 +155,7 @@ class Uri extends Immutable implements \Psr\Http\Message\UriInterface {
 		return preg_replace_callback( 
 			$rx,
 			function( array $match ) {
-				return rawurlencode($match[0]);
+				return rawurlencode( $match[0] );
 			},
 			$path
 		);
