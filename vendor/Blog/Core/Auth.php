@@ -31,9 +31,11 @@ class Auth extends Handlers\Handler  {
 			$event->getName(), 
 			$event->getRules()
 		);
+		
+		$event->set( 'session_id', session_id() );
 	}
 	
-	private function processEventRules( $name ) {
+	private function processEventRules( $name, $rules ) {
 		
 	}
 	
@@ -122,10 +124,7 @@ class Auth extends Handlers\Handler  {
 	 */
 	private function sessionCanary() {
 		$key	= $this->getSetting( 'visit_key' );
-		
-		$bytes	= $this->dispatcher
-				->crypto()
-				->bytes( $key );
+		$bytes	= $this->getCrypto()->bytes( $key );
 		
 		$_SESSION['canary'] = [
 			'exp'	=> time(),
