@@ -32,9 +32,10 @@ final class Config {
 	 */
 	private function loadConfig() {
 		if ( defined( 'CONFIG' ) ) {
+			$data	= html_entity_decode( CONFIG );
 			$data	= 
 			json_decode( 
-				trim( CONFIG ), 
+				preg_replace( '/\s+/', '', $data ),
 				true, 
 				self::DECODE_DEPTH 
 			);
