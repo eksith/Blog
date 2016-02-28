@@ -176,6 +176,30 @@ final class Crypto {
 		return $key;
 	}
 	
+	
+	private function pbk( $algo, $txt, $salt, $rounds, $kl ) {
+		if ( function_exists( 'hash_pbkdf2' ) ) {
+			return \hash_pbkdf2( 
+				$algo, $txt, $salt, $rounds, $kl 
+			);
+		}
+		$hl	= strlen( hash( $algo, '', true ) );
+		$bl	= ceil( $kl / $hl );
+		$out	= '';
+		
+		for ( $i = 1; $i <= $bl; $i++ ) {
+			$l = $salt . pack( 'N', $i );
+			$l = $x = hash_hmac( $algo, $l, $txt, true );
+			for ( $j = 1; $l < $rounds; $j++ ) {
+				$x ^= ( $l = 
+				hash_hmac( $algo, $l, $txt, true ) );
+			}
+			$out .= $x;
+		}
+		
+		return bin2hex( substr( $out, 0, $kl ) );
+	}
+	
 	public function genPbk(
 		$algo	= 'tiger160,4', 
 		$txt,
@@ -187,9 +211,8 @@ final class Crypto {
 		$kl	= ( $kl <= 0 ) ? 128 : $kl;
 		$salt	= empty( $salt ) ? 
 				bin2hex( $this->bytes( 8, 2 ) ) : $salt;
-		$key	= \hash_pbkdf2( 
-				$algo, $txt, $salt, $rounds, $kl 
-			);
+		
+		$key	= $this->pbk( $algo, $txt, $salt, $rounds, $kl );
 		$out	= array(
 				$algo, $txt, $salt, $rounds, $kl, $key
 			);
