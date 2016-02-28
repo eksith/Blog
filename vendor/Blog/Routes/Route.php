@@ -20,15 +20,42 @@ class Route {
 	 */
 	protected $event;
 	
+	private static $secure_routes	= array();
+	private static $register_route;
+	private static $login_route;
+	private static $logout_route;
+	
 	/**
 	 * Create a new route with a given request
 	 */
-	public function __construct( $name, Core\Request $request ) {
+	public function __construct(
+		$name,
+		$route,
+		Core\Request $request
+	) {
 		$this->sender	= new Events\Dispatcher( $request );
 		$this->event	= 
 			new Events\Event( $name, $this->sender );
 		
 		$this->sender->attach( 'route', $this->event );
+	}
+	
+	public static function addSecureRoute( $route ) {
+		static::$auth_route[]	= $route;
+		static::$auth_route	= 
+			array_unique( static::$auth_route );
+	}
+	
+	public static function setRegisterRoute( $route ) {
+		static::$register_route	= $route;
+	}
+	
+	public static function setLoginRoute( $route ) {
+		static::$login_route	= $route;
+	}
+	
+	public static function setLogoutRoute( $route ) {
+		static::$logout_route	= $route;
 	}
 	
 	/**
@@ -51,5 +78,18 @@ class Route {
 		
 		// Authorization handler always gets added first
 		$this->add( new Core\Auth( $this->sender ) );
+	}
+	
+	private function isSecureRoute( $route ) {
+		foreach ( static::$secure_routes as $secure ) {
+			$len	= mb_strlen( $secure, '8bit' );
+			if ( 0 === strncasecmp( 
+				$secure, $route, $len 
+			) ) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 }
