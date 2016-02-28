@@ -3,6 +3,8 @@
 define( 'PATH',			\realpath( \dirname( __FILE__ ) ) . '/' );
 define( 'PKGS',			PATH . 'vendor/' );
 
+// Use the |PATH| placeholder if the relevant folder/resource 
+// is relative to this config file
 define( 'CONFIG', <<<JSON
 {
 	"version"		: "0.01",
@@ -13,6 +15,8 @@ define( 'CONFIG', <<<JSON
 	
 	"theme_path"		: "|PATH|themes\/",
 	"theme_display"		: "\/themes\/",
+	"theme_include_limit"	: 40,
+	"theme_compile_hash"	: "sha256",
 	
 	"list_per_page"		: 20,
 	"posts_per_page"	: 15,
@@ -59,6 +63,7 @@ define( 'CONFIG', <<<JSON
 	"post_status_fnoanon"	: 3,
 	"post_status_closed"	: 4,
 	"post_status_fclosed"	: 5,
+	
 	"user_status_buried"	: -1,
 	"user_status_regular"	: 0,
 	"user_status_sub"	: 97,
