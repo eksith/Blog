@@ -8,12 +8,20 @@ class View extends Handlers\Handler {
 	
 	private $theme		= 'default';
 	
-	const SERIALIZE_HASH	= 'sha256';
+	/**
+	 * @var int Count of template includes per render
+	 */
+	private $included	= 0;
 	
 	/**
 	 * Template option states
 	 */
-	protected $states = array();
+	protected $states	= array();
+	
+	/**
+	 * Fallback default theme compile hash
+	 */
+	const COMPILE_HASH	= 'sha256';
 	
 	/**
 	 * XML placeholder and matching rendered content
@@ -103,6 +111,9 @@ class View extends Handlers\Handler {
 		return $node->getElementsByTagName( $tag );
 	}
 	
+	/**
+	 * Check if template option state exits
+	 */
 	public function hasState( $name ) {
 		return isset( $this->state[$name] );
 	}
@@ -132,7 +143,7 @@ class View extends Handlers\Handler {
 	}
 	
 	/**
-	 * All template states
+	 * All template option states
 	 */
 	protected function getAllStates() {
 		return $this->state;
@@ -203,6 +214,8 @@ class View extends Handlers\Handler {
 		
 		$html		= '';
 		$tpl		= $this->innerHTML( $node );
+		
+		// TODO: Move this outside the loop
 		foreach( $items as $i ) {
 			$html .= $this->renderXml( $tpl, $i );
 		}
@@ -295,7 +308,15 @@ class View extends Handlers\Handler {
 	 * Cache key for compiled template conditions
 	 */
 	protected function conditionsKey( $conds ) {
-		return hash( self::SERIALIZE_HASH, serialize( $conds ) );
+		$hash	= $this->getSeting( 'theme_compile_hash' );
+		if ( empty( $hash ) ) {
+			$hash = self::COMPILE_HASH;
+		}
+		
+		return hash(
+			$hash,
+			json_encode( $conds )
+		);
 	}
 	
 	/**
@@ -332,13 +353,22 @@ class View extends Handlers\Handler {
 		&$conds, 
 		&$dom 
 	) {
+		if ( $this->includeCheck() ) {
+			return;
+		}
+		
 		$files	= $this->getTags( 'include', $dom );
 		foreach( $files as $f ) {
+			if ( $this->includeCheck() ) {
+				return;
+			}
 			if ( empty( $f->nodeValue ) ) {
 				continue;
 			}
-			
 			$data  = $this->loadFile( $f->nodeValue );
+			$this->included++;
+			
+			// Swap the include tag with loaded data
 			$this->swapHTML( $data, $f, $dom );
 			
 			// Parse any new conditions after load
@@ -350,6 +380,18 @@ class View extends Handlers\Handler {
 	}
 	
 	/**
+	 * Template include limit. This check was introduced to prevent
+	 * designers from getting carried away with too many includes
+	 */
+	protected function includeCheck() {
+		$limit = $this->getSetting( 'theme_include_limit' );
+		if ( $this->included >= $limit ) {
+			return true;
+		}
+		return false;
+	}
+	
+	/**
 	 * Template parser. 
 	 * Creates a new DOMDocument and loads the template into itself.
 	 * Calls for any conditionals to be interpreted, includes to be 
@@ -357,7 +399,8 @@ class View extends Handlers\Handler {
 	 */
 	protected function parse( 
 		$tpl, 
-		$conds = array() 
+		$conds,
+		$cache
 	) {
 		$data				= 
 			$this->loadFile( $tpl );
@@ -382,8 +425,7 @@ class View extends Handlers\Handler {
 		// Parse pre-include conditions
 		$this->parseConditions( $conds, $dom );
 		
-		// Include any secondary files
-		//$this->loadIncludes( $conds, $dom );
+		// Loop through items
 		$this->parseLoops( $conds, $dom );
 		
 		\libxml_clear_errors();
@@ -391,12 +433,12 @@ class View extends Handlers\Handler {
 		
 		$page = $dom->saveHTML();
 		
-		// Workaround for dodgy content breaking the XML parser
-		foreach( $this->data as $k => $v ) {
-			$page = str_replace( $k, $v, $page );
+		// Caching is enabled for this template
+		if ( $cache ) {
+			$this->cacheTemplate( $conds, $page );
 		}
 		
-		return $page;
+		return $this->renderData( $page );
 	}
 	
 	/**
@@ -406,10 +448,11 @@ class View extends Handlers\Handler {
 	 */
 	protected function sendView( 
 		$template, 
-		$conds, 
-		$vars = array() 
+		$conds	= array(), 
+		$vars	= array(),
+		$cache	= false
 	) {
-		$html = $this->parse( $template, $conds );
+		$html = $this->parse( $template, $conds, $cache );
 		echo $this->render( $html, $vars );
 	}
 	
@@ -422,6 +465,16 @@ class View extends Handlers\Handler {
 			return file_get_contents(  $name );
 		}
 		return '';
+	}
+	
+	/**
+	 * Save generated page template to compile directory
+	 */
+	protected function cacheTemplate( $conds, $page ) {
+		$key	= $this->conditionsKey( $conds );
+		$path	= $this->getConfig( 'compiled_tpl_path' );
+		
+		file_put_contents( $path . $key, $page );
 	}
 	
 	/**
