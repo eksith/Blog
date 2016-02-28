@@ -57,32 +57,39 @@ $router->add( 'get', 'read/:year/:month/:day/:slug/page:page', array( '\\Blog\\R
 
 
 // Create post
-$router->add( 'get', 'new', array( '\\Blog\\Routes\\ContentRoute', 'creatingPost' ) );
-$router->add( 'post', 'new', array( '\\Blog\\Routes\\ContentRoute', 'createPost' ) );
+$router->add( 'get', 'manage/new', array( '\\Blog\\Routes\\ContentRoute', 'creatingPost' ) );
+$router->add( 'post', 'manage/new', array( '\\Blog\\Routes\\ContentRoute', 'createPost' ) );
+Blog\Routes\Route::addSecureRoute( 'manage/new' ); // Authorized users may enter
 
 // Edit post
-$router->add( 'get', 'edit/:id', array( '\\Blog\\Routes\\ContentRoute', 'editingPost' ) );
-$router->add( 'post', 'edit/:id', array( '\\Blog\\Routes\\ContentRoute', 'editPost' ) );
+$router->add( 'get', 'manage/edit/:id', array( '\\Blog\\Routes\\ContentRoute', 'editingPost' ) );
+$router->add( 'post', 'manage/edit/:id', array( '\\Blog\\Routes\\ContentRoute', 'editPost' ) );
+Blog\Routes\Route::addSecureRoute( 'manage/edit' );
 
 // Delete post
-$router->add( 'get', 'delete/:id', array( '\\Blog\\Routes\\ContentRoute', 'deletingPost' ) );
-$router->add( 'post', 'delete/:id', array( '\\Blog\\Routes\\ContentRoute', 'deletePost' ) );
+$router->add( 'get', 'manage/delete/:id', array( '\\Blog\\Routes\\ContentRoute', 'deletingPost' ) );
+$router->add( 'post', 'manage/delete/:id', array( '\\Blog\\Routes\\ContentRoute', 'deletePost' ) );
+Blog\Routes\Route::addSecureRoute( 'manage/delete' );
 
 
 // User login
-$router->add( 'get', 'login', array( '\\Blog\\Routes\\UserRoute', 'loggingIn' ) );
-$router->add( 'post', 'login', array( '\\Blog\\Routes\\UserRoute', 'login' ) );
+$router->add( 'get', 'manage/login', array( '\\Blog\\Routes\\UserRoute', 'loggingIn' ) );
+$router->add( 'post', 'manage/login', array( '\\Blog\\Routes\\UserRoute', 'login' ) );
+Blog\Routes\Route::setLoginRoute( 'manage/login' );
 
 // User register
-$router->add( 'get', 'register', array( '\\Blog\\Routes\\UserRoute', 'registering' ) );
-$router->add( 'post', 'register', array( '\\Blog\\Routes\\UserRoute', 'register' ) );
+$router->add( 'get', 'manage/register', array( '\\Blog\\Routes\\UserRoute', 'registering' ) );
+$router->add( 'post', 'manage/register', array( '\\Blog\\Routes\\UserRoute', 'register' ) );
+Blog\Routes\Route::setRegisterRoute( 'manage/register' );
 
 // User logout
-$router->add( 'get', 'logout', array( '\\Blog\\Routes\\UserRoute', 'logout' ) );
+$router->add( 'get', 'manage/logout', array( '\\Blog\\Routes\\UserRoute', 'logout' ) );
+Blog\Routes\Route::setLogoutRoute( 'manage/logout' );
 
 // User Profile
-$router->add( 'get', 'profile', array( '\\Blog\\Routes\\UserRoute', 'profileView' ) );
-$router->add( 'post', 'profile', array( '\\Blog\\Routes\\UserRoute', 'profileChanged' ) );
+$router->add( 'get', 'manage/profile', array( '\\Blog\\Routes\\UserRoute', 'profileView' ) );
+$router->add( 'post', 'manage/profile', array( '\\Blog\\Routes\\UserRoute', 'profileChanged' ) );
+Blog\Routes\Route::addSecureRoute( 'manage/profile' );
 
 
 $router->route( $markers );
