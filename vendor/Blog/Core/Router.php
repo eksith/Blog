@@ -36,12 +36,12 @@ class Router {
 			$route	= str_replace( $k, $v, $route );
 			if ( preg_match( $route, $path, $params ) ) {
 				$found = true;
-				$this->send( $params, $handler  );
+				$this->send( $params, $route, $handler );
 			}
 		}		
 	}
 	
-	private function send( $params, $handler ) {
+	private function send( $params, $route, $handler ) {
 		$params = $this->filter( $params );
 		
 		if ( count( $params ) > 0 ) {
@@ -49,7 +49,11 @@ class Router {
 			//array_shift( $params );
 		}
 		
-		$handle = new $handler[0]( $handler[1], $this->request );
+		$handle = new $handler[0](
+				$handler[1],
+				$route,
+				$this->request
+			);
 		$handle->route( $params );
 	}
 	
