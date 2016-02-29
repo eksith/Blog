@@ -1,6 +1,7 @@
 <?php
 
 namespace Blog\Routes;
+use Blog\Messaging;
 use Blog\Core;
 use Blog\Events;
 use Blog\Handlers;
@@ -31,7 +32,7 @@ class Route {
 	public function __construct(
 		$name,
 		$route,
-		Core\Request $request
+		Messaging\ServerRequest $request
 	) {
 		$this->sender	= new Events\Dispatcher( $request );
 		$this->event	= 
