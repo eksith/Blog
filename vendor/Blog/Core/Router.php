@@ -1,6 +1,7 @@
 <?php
 
 namespace Blog\Core;
+use Blog\Messaging;
 
 class Router {
 	
@@ -8,7 +9,7 @@ class Router {
 	
 	private static $routes	= array();
 	
-	public function __construct( Request $request ) {
+	public function __construct( Messaging\ServerRequest $request ) {
 		$this->request = $request;
 	}
 	
