@@ -155,23 +155,25 @@ class HtmlFilter {
 		\DOMNode $node,
 		\DOMNode &$clean
 	) {
-		foreach ( \iterator_to_array( $node->attributes ) as $at ) {
+		foreach ( 
+			\iterator_to_array( $node->attributes ) as $at
+		) {
 			$n = $at->nodeName;
 			$v = $at->nodeValue;
 			
-			if ( in_array( $n, $this->white[$node->nodeName] ) )
+			if ( in_array( $n, $this->white[$node->nodeName] ) ) {
 				switch( $n ) {
 					case 'longdesc':
 					case 'url':
 					case 'src':
 					case 'href':
-						$v = \Blog\Core\Uri::cleanUrl( $v );
+						$v = 
+						\Blog\Messaging\Uri::cleanUrl( $v );
 						break;
 						
 					default:
 						$v = $this->entities( $v );
 				}
-				
 				
 				$clean->setAttribute( $n, $v );
 			}
