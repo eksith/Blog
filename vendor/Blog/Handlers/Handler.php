@@ -162,8 +162,7 @@ class Handler extends Events\Listener {
 		$sig		= $this->getSignature();
 		
 		return $this->getCrypto()->verifyPbk(
-			$form. $session . $sig, 
-			$hash
+			$form . $session . $sig, $hash
 		);
 	}
 }
