@@ -10,6 +10,10 @@ class Listener implements \SplObserver {
 		$this->dispatcher	= $dispatcher;
 	}
 	
+	public function getDispatcher() {
+		return $this->dispatcher;
+	}
+	
 	protected function getRequest() {
 		return $this->dispatcher->getRequest();
 	}
@@ -36,6 +40,7 @@ class Listener implements \SplObserver {
 	
 	public function update( \SplSubject $event ) {
 		$name = $event->getName();
+		
 		if ( method_exists( $this, $name ) ) {
 			$this->{$name}( $event );
 		} elseif( method_exists( $this, 'handleEvent' ) ) {

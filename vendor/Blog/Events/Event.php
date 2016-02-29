@@ -15,6 +15,10 @@ class Event implements \SplSubject {
 		$this->handlers		= new \SplObjectStorage();
 	}
 	
+	public function getDispatcher() {
+		return $this->dispatcher;
+	}
+	
 	public function getRequest() {
 		return $this->dispatcher->getRequest();
 	}
