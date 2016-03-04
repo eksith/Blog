@@ -27,6 +27,7 @@ class Uri extends Immutable implements \Psr\Http\Message\UriInterface {
 	protected $userInfo	= '';
 	protected $fragment	= '';
 	protected $path		= '';
+	protected $raw_uri	= '';
 	
 	protected $errors	= array();
 	
@@ -35,8 +36,10 @@ class Uri extends Immutable implements \Psr\Http\Message\UriInterface {
 			$uri = self::fullUri();
 		}
 		
-		$uri	= self::cleanUrl( $uri );
-		$parts	= parse_url( $uri );
+		$this->raw_uri	= $uri;
+		$uri		= self::cleanUrl( $uri );
+		$parts		= parse_url( $uri );
+		
 		if ( false === $parts ) {
 			return; // Error
 		}
@@ -85,6 +88,10 @@ class Uri extends Immutable implements \Psr\Http\Message\UriInterface {
 	
 	public function getRoot() {
 		
+	}
+	
+	public function getRawPath() {
+		return $this->raw_uri;
 	}
 	
 	public function withScheme( $scheme ) {
