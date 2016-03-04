@@ -9,13 +9,6 @@ class Auth extends Handlers\Handler  {
 	
 	public function __construct( Events\Dispatcher $dispatcher ) {
 		parent::__construct( $dispatcher );
-		/*
-		$session = new BlogSession();
-		\session_set_save_handler( $session, true );
-		register_shutdown_function( 
-			'session_write_close' 
-		);
-		*/
 	}
 	
 	/**
@@ -131,66 +124,5 @@ class Auth extends Handlers\Handler  {
 			'visit'	=> bin2hex( $bytes ),
 			'sig'	=> $this->getSignature()
 		];
-	}
-	
-	/**
-	 * Verify IP address format
-	 */
-	private function validateIP( $ip ) {
-		if ( filter_var(
-			$ip,
-			\FILTER_VALIDATE_IP,
-			\FILTER_FLAG_NO_PRIV_RANGE | 
-			\FILTER_FLAG_NO_RES_RANGE
-		) ) {
-			return true;
-		}
-		return false;
-	}
-	
-	/**
-	 * Best effort IP address retrieval
-	 */
-	private function ip() {
-		if ( isset( $this->ip ) ) { 
-			return $this->ip;
-		}
-		if ( array_key_exists( 
-			'HTTP_X_FORWARDED_FOR', 
-			$_SERVER 
-		) ) {
-			$range = array_reverse( explode( 
-					',', 
-					$_SERVER['HTTP_X_FORWARDED_FOR']
-				) );
-			foreach( $range as $i ) {
-				if ( $this->validateIP( $i ) ) {
-					$this->ip = $i ;
-					break;
-				}
-			}
-		}
-		
-		// Fallback
-		if ( isset( $this->ip ) ) {
-			$this->ip = $_SERVER['REMOTE_ADDR'];
-		}
-		return $this->ip;
-	}
-	
-	/**
-	 * Check request method against expected list of methods.
-	 * Kills the script on failure.
-	 */
-	public function accept( $methods ) {
-		$request = strtolower( $_SERVER['REQUEST_METHOD'] );
-		if ( is_array( $methods ) ) { 
-			if ( in_array( $request, $methods ) ) {
-				return;
-			}
-		} elseif ( $request == $methods ) { 
-			return;
-		}
-		$this->finish( false );
 	}
 }
