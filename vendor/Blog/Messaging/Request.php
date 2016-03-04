@@ -8,7 +8,6 @@ class Request extends Message
 	protected $method;
 	protected $target;
 	protected $uri;
-	protected $sent_headers;
 	
 	public function __construct(
 		$method,
