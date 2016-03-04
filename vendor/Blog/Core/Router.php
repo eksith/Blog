@@ -9,7 +9,9 @@ class Router {
 	
 	private static $routes	= array();
 	
-	public function __construct( Messaging\ServerRequest $request ) {
+	public function __construct(	
+		Messaging\ServerRequest $request
+	) {
 		$this->request = $request;
 	}
 	
@@ -72,7 +74,10 @@ class Router {
 		return array_intersect_key(
 			$matches, 
 			array_flip( 
-				array_filter( array_keys( $matches ), 'is_string' )
+				array_filter(
+					array_keys( $matches ), 
+					'is_string' 
+				)
 			)
 		);
 	}
