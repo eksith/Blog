@@ -32,13 +32,14 @@ final class Config {
 	 */
 	private function loadConfig() {
 		if ( defined( 'CONFIG' ) ) {
-			$data	= html_entity_decode( CONFIG );
+			$data	= trim( html_entity_decode( CONFIG ) );
 			$data	= 
 			json_decode( 
 				preg_replace( '/\s+/', '', $data ),
 				true, 
 				self::DECODE_DEPTH 
 			);
+			
 		} elseif (
 			defined( 'KEY_PART1' ) && 
 			defined( 'KEY_PART2' ) && 
