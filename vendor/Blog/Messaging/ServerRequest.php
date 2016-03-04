@@ -1,13 +1,12 @@
 <?php
 
 namespace Blog\Messaging;
+use Blog\Core;
 
 // http://www.php-fig.org/psr/psr-7/
 class ServerRequest extends Request 
 	implements \Psr\Http\Message\ServerRequestInterface {
-	
-	private $ip;
-	
+		
 	private $browser;
 	
 	private $rawsig;
@@ -16,6 +15,8 @@ class ServerRequest extends Request
 	
 	private $parsed_body;
 	
+	private $files;
+	
 	public function __construct(
 		$method		= null,
 		$uri		= null,
@@ -23,11 +24,13 @@ class ServerRequest extends Request
 		array $headers	= array(),
 		$protocol	= null
 	) {
+		$this->signature();
+		
 		if ( empty( $body ) ) {
 			$body	= file_get_contents( 'php://stdin' );
 		}
 		if ( empty( $headers ) ) {
-			$headers	= $this->headers();
+			$headers	= $this->browser->headers();
 		}
 		if ( empty( $method ) ) {
 			$method		= $_SERVER['REQUEST_METHOD'];
@@ -43,8 +46,6 @@ class ServerRequest extends Request
 			$headers,
 			$protocol
 		);
-		
-		$this->signature();
 	}
 	
 	public function getServerParams() {
@@ -68,7 +69,17 @@ class ServerRequest extends Request
 	}
 	
 	public function getUploadedFiles() {
-		// TODO
+		if ( isset( $this->files ) ) {
+			return $this->files;
+		}
+		
+		if ( empty $_FILES ) {
+			$this->files	= $tihs->filesFromPut();
+		} else {
+			$this->files	= $this->filesFromArray();
+		}
+		
+		return $this->files;
 	}
 	
 	public function withUploadedFiles( array $uploadedFiles ) {
@@ -108,45 +119,53 @@ class ServerRequest extends Request
 		return $this->browser;
 	}
 	
+	private function filesPut() {
+		$files = array();
+		
+		return $files;
+	}
+	
+	// https://php.net/manual/en/features.file-upload.php#114004
+	// https://php.net/manual/en/features.file-upload.post-method.php#118858
+	private function filesFromArray() {
+		$files = array();
+		
+		foreach ( $_FILES as $label => $upload ) {
+			if ( !is_array( $upload['name'] ) ) {
+				$files[$label][] = 
+				new UploadFile(
+					$label,
+					$upload['type'],
+					$upload['tmp_name'],
+		
+			$upload['size'],
+					$upload['error']
+				);
+				continue;
+			}
+			
+			foreach ( $upload['name'] as $param => $value ) {
+				$files[$label][$param] = 
+				new UploadedFile(
+					$label,
+					$upload['type'][$param],
+					$upload['tmp_name'][$param],
+					$upload['size'][$param],
+					$upload['error'][$param],
+				);
+			}
+		}
+		
+		return $files;
+	}
+	
 	private function signature() {
 		if ( !isset( $this->browser ) ) {
-			$this->browser = new BrowserProfile();
+			$this->browser = 
+				new Core\Security\BrowserProfile();
 		}
 		
 		$this->sig	= $this->browser->getSignature();
 		$this->rawsig	= $this->browser->getSignature( true );
-	}
-	
-	private function headers( $key = null ) {
-		if ( !isset( $this->sent_headers ) ) {
-			if ( function_exists( 'getallheaders' ) ) {
-				$this->sent_headers = \getallheaders();
-			} else {
-				$this->sent_headers = 
-					$this->httpHeaders();
-			}
-		}
-		
-		if ( null == $key ) {
-			return $this->sent_headers;
-		}
-		return isset( $this->sent_headers[$key] )? 
-			$this->sent_headers[$key] : null;
-	}
-	
-	private function httpHeaders() {
-		$val = array();
-		foreach ( $_SERVER as $k => $v ) {
-			if ( strncmp( $k, 'HTTP_', 5 ) ) {
-				$a = explode( '_' ,$k );
-				array_shift( $a );
-				array_walk( $a, function( &$r ) {
-					$r = ucfirst( strtolower( $r ) );
-				});
-				$val[ implode( '-', $a ) ] = $v;
-			}
-		}
-		
-		return $val;
 	}
 }
