@@ -78,7 +78,7 @@ class Immutable {
 		return "\r\nHost: " . $message->getUri()->getHost();
 	}
 	
-	protected function getReasonString((
+	protected function getReasonString(
 		Message\MessageInterface $message
 	) {
 		return $this->getHttpString( $message ) . 
