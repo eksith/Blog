@@ -42,9 +42,9 @@ class Route {
 	}
 	
 	public static function addSecureRoute( $route ) {
-		static::$auth_route[]	= $route;
-		static::$auth_route	= 
-			array_unique( static::$auth_route );
+		static::$secure_routes[]	= $route;
+		static::$secure_routes	= 
+			array_unique( static::$secure_routes );
 	}
 	
 	public static function setRegisterRoute( $route ) {
