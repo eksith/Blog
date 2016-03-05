@@ -42,7 +42,7 @@ class Sensor {
 		Messaging\ServerRequest $request
 	) {
 		$this->request	= $request;
-		$this->browser	= $request->getBrowserProfile();
+		#$this->browser	= $request->getBrowserProfile()->browser();
 	}
 	
 	/**
@@ -186,7 +186,7 @@ class Sensor {
 	 * Check for completely missing headers, headers which contain 
 	 * an empty string or is below the minimum length
 	 */
-	public static function missing( &$h, $k, $min = 0 ) {
+	public static function missing( $h, $k, $min = 0 ) {
 		if ( array_key_exists( $k, $h ) ) {
 			if ( empty( $h[$k] ) ) {
 				return true;
@@ -209,7 +209,7 @@ class Sensor {
 	 * Helper to see if a key exists in an array, has a component
 	 * to search in the value or matches to an optional regular expression
 	 */
-	public static function has( &$h, $k, $v = null, $regex = false ) {
+	public static function has( $h, $k, $v = null, $regex = false ) {
 		$has = array_key_exists( $k, $h );
 		
 		/**
