@@ -3,15 +3,12 @@
 // Example routes
 // Change this to suit your own blog structure
 
-// Prepare request and route
-$request	= 
-new Blog\Core\Request( 
-		null,
-		new Blog\Core\Uri(),
-		file_get_contents( 'php://stdin' ),
-		array(),
-		null
-	);
+// Prepare request
+$request	= new Blog\Messaging\ServerRequest();
+
+// Prepare firewall
+$firewall	= new Blog\Core\Security\Sensor( $request );
+$firewall->run();
 
 // Placeholder markers (doubles as variable names passed to routes)
 $markers	= 
