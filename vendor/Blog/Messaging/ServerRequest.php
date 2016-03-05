@@ -49,23 +49,23 @@ class ServerRequest extends Request
 	}
 	
 	public function getServerParams() {
-		// TODO
+		# TODO
 	}
 	
 	public function getCookieParams() {
-		// TODO
+		# TODO
 	}
 	
 	public function withCookieParams( array $cookies ) {
-		// TODO
+		# TODO
 	}
 	
 	public function getQueryParams() {
-		// TODO
+		# TODO
 	}
 	
 	public function withQueryParams( array $query ) {
-		// TODO
+		# TODO
 	}
 	
 	public function getUploadedFiles() {
@@ -73,7 +73,7 @@ class ServerRequest extends Request
 			return $this->files;
 		}
 		
-		if ( empty $_FILES ) {
+		if ( empty( $_FILES ) ) {
 			$this->files	= $tihs->filesFromPut();
 		} else {
 			$this->files	= $this->filesFromArray();
@@ -83,7 +83,7 @@ class ServerRequest extends Request
 	}
 	
 	public function withUploadedFiles( array $uploadedFiles ) {
-		// TODO
+		# TODO
 	}
 	
 	public function getParsedBody() {
@@ -99,13 +99,25 @@ class ServerRequest extends Request
 	}
 	
 	public function getAttributes() {
-		// TODO
+		# TODO
+	}
+	
+	public function getAttribute( $name, $default = null ) {
+		# TODO
+	}
+	
+	public function withAttribute( $name, $value ) {
+		# TODO
+	}
+	
+	public function withoutAttribute( $name ) {
+		# TODO
 	}
 	
 	// https://secure.php.net/manual/en/wrappers.php.php
 	// Detect content type and parse as application/x-www-form-urlencoded or multipart/form-data
 	public function getBodyWithFilter( $filter ) {
-		// TODO
+		# TODO
 	}
 	
 	public function getSignature( $raw = false ) {
@@ -151,7 +163,7 @@ class ServerRequest extends Request
 					$upload['type'][$param],
 					$upload['tmp_name'][$param],
 					$upload['size'][$param],
-					$upload['error'][$param],
+					$upload['error'][$param]
 				);
 			}
 		}
