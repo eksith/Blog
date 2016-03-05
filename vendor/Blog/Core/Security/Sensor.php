@@ -23,7 +23,6 @@ class Sensor {
 	 */
 	private $methods 	= array( 'get', 'head', 'post', 'put' );
 	
-	
 	/**
 	 * @var array Whitelist of acceptable ports
 	 */
@@ -193,9 +192,13 @@ class Sensor {
 				return true;
 			}
 			
-			//if ( $min > 0 && mb_strlen( $h[$k] ) < $min ) {
-			//	return true;
-			//}
+			$chk = is_array( $h[$k] ) ? $h[$k][0] : $h[$k];
+			if ( 
+				$min > 0 && 
+				mb_strlen( $chk, '8bit' ) < $min 
+			) {
+				return true;
+			}
 			return false;
 		}
 		
