@@ -324,7 +324,7 @@ class View extends Handlers\Handler {
 	 */
 	protected function renderData( $page ) {
 		foreach( $this->data as $k => $v ) {
-			str_replace( $k, $v, $page );
+			$page = str_replace( $k, $v, $page );
 		}
 		return $page;
 	}
