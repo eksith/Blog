@@ -30,17 +30,10 @@ class Profile extends Handlers\Handler {
 			'profile_csrf',
 			$this->getCsrf( 'profile', $event ) 
 		);
-		$event->set(
-			'password_csrf',
-			$this->getCsrf( 'password', $event )
-		);
-		$event->set(
-			'deleteacct_csrf',
-			$this->getCsrf( 'deleteacct', $event )
-		);
 	}
 	
 	public function profileChanged( Events\Event $event ) {
+		# TODO
 		echo 'Profile changed';
 	}
 }
