@@ -34,6 +34,12 @@ class Listener implements \SplObserver {
 				->getSetting( $setting );
 	}
 	
+	protected function getSettings( array $settings = array() ) {
+		return $this->dispatcher
+				->getConfig()
+				->getSettings( $settings );
+	}
+	
 	protected function getCrypto() {
 		return $this->dispatcher->getCrypto();
 	}
