@@ -18,6 +18,9 @@ define( 'CONFIG', <<<JSON
 	"theme_include_limit"	: 40,
 	"theme_compile_hash"	: "sha256",
 	
+	"enable_register"	: true,
+	"enable_login"		: true,
+	
 	"list_per_page"		: 20,
 	"posts_per_page"	: 15,
 	"data_timeout"		: 10,
