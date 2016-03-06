@@ -508,4 +508,32 @@ class View extends Handlers\Handler {
 		
 		return $map;
 	}
+	
+	protected function preamble() {
+		if ( headers_sent() ) {
+			return;
+		}
+		
+		header( 'X-Frame-Options: deny' );
+		header( 'X-XSS-Protection: 1; mode=block' );
+		header( 'X-Content-Type-Options: nosniff' );
+		header( 'Content-Security-Policy: default-src \'self\'' );
+	}
+	
+	protected function mailHeader( $subject, $name, $to, $message ) {
+		$headers = array();
+		
+		if ( empty( $name ) ) {
+			$name = $to;
+		}
+		
+		$headers[] = "MIME-Version: 1.0";
+		$headers[] = "Content-type: text/plain; charset=utf-8";
+		$headers[] = "From: Thebes <thebesforum@gmail.com>";
+		$headers[] = "Reply-To: {$name} <{$to}>";
+		$headers[] = "Subject: {$subject}";
+		$headers[] = "X-Mailer: Thebes 0.3";
+		
+		return implode("\r\n", $headers );
+	}
 }
