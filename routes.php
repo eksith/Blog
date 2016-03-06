@@ -86,8 +86,9 @@ Blog\Routes\Route::setLogoutRoute( 'manage/logout' );
 // User Profile
 $router->add( 'get', 'manage/profile', array( '\\Blog\\Routes\\UserRoute', 'profileView' ) );
 $router->add( 'post', 'manage/profile', array( '\\Blog\\Routes\\UserRoute', 'profileChanged' ) );
-Blog\Routes\Route::addSecureRoute( 'manage/profile' );
 
+$router->add( 'post', 'manage/changepass', array( '\\Blog\\Routes\\UserRoute', 'passChanged' ) );
+Blog\Routes\Route::addSecureRoute( 'manage/profile' );
 
 $router->route( $markers );
 
