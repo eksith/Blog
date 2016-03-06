@@ -33,6 +33,10 @@ class UserRoute extends Route {
 				$this->profile( $this->sender );
 				break;
 				
+			case 'passChanged':
+				$this->passChanged( $this->sender );
+				break;
+				
 			case 'deleteView':
 				$this->deleteView( $this->sender );
 				break;
@@ -47,6 +51,7 @@ class UserRoute extends Route {
 	
 	private function loginView( $sender ) {
 		$this->add( new Handlers\User\Login( $sender ) );
+		$this->add( new Handlers\User\Register( $sender ) );
 		$this->add( new Views\User\Login( $sender ) );
 	}
 	
@@ -65,11 +70,17 @@ class UserRoute extends Route {
 	
 	private function profileView( $sender ) {
 		$this->add( new Handlers\User\Profile( $sender ) );
+		$this->add( new Handlers\User\ChangePass( $sender ) );
+		$this->add( new Handlers\User\Delete( $sender ) );
 		$this->add( new Views\User\Profile( $sender ) );
 	}
 	
 	private function profileChanged( $sender ) {
 		$this->add( new Handlers\User\Profile( $sender ) );
+	}
+	
+	private function passChanged( $sender ) {
+		$this->add( new Handlers\User\ChangePass( $sender ) );
 	}
 	
 	private function deleteView( $sender ) {
