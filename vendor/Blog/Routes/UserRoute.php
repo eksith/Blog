@@ -32,6 +32,14 @@ class UserRoute extends Route {
 			case 'profileChanged':
 				$this->profile( $this->sender );
 				break;
+				
+			case 'deleteView':
+				$this->deleteView( $this->sender );
+				break;
+				
+			case 'delete':
+				$this->delete( $this->sender );
+				break;
 		}
 		
 		$this->sender->dispatch( 'route' );
@@ -62,5 +70,14 @@ class UserRoute extends Route {
 	
 	private function profileChanged( $sender ) {
 		$this->add( new Handlers\User\Profile( $sender ) );
+	}
+	
+	private function deleteView( $sender ) {
+		$this->add( new Handlers\User\Delete( $sender ) );
+		$this->add( new Views\User\Delete( $sender ) );
+	}
+	
+	private function delete( $sender ) {
+		$this->add( new Handlers\User\Delete( $sender ) );
 	}
 }
