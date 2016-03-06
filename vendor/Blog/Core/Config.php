@@ -22,6 +22,17 @@ final class Config {
 			$this->settings[$name] : null;
 	}
 	
+	public function getSettings( array $names = array() ) {
+		$values = array();
+		foreach ( $names as $name ) {
+			$values[$name] = 
+				isset( $this->settings[$name] ) ? 
+					$this->settings[$name] : null
+		}
+		
+		return $values;
+	}
+	
 	/**
 	 * Load application configuration settings from a defined 
 	 * variable that is JSON formatted or get it from an encrypted
