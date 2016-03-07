@@ -57,6 +57,8 @@ class ContentRoute extends Route {
 	private function creating( $sender ) {
 		$event->add( new Handlers\Content\Create( $sender ) );
 		$event->add( new Views\Content\Create( $sender ) );
+		
+		$this->add( new Views\Content\Manage( $sender ) );
 	}
 	
 	private function create( $sender ) {
@@ -66,6 +68,8 @@ class ContentRoute extends Route {
 	private function editing( $sender ) {
 		$event->add( new Handlers\Content\Edit( $sender ) );
 		$event->add( new Views\Content\Edit( $sender ) );
+		
+		$this->add( new Views\Content\Manage( $sender ) );
 	}
 	
 	private function edit( $sender ) {
@@ -75,10 +79,11 @@ class ContentRoute extends Route {
 	private function deleting( $sender ) {
 		$event->add( new Handlers\Content\Delete( $sender ) );
 		$event->add( new Views\Content\Delete( $sender ) );
+		
+		$this->add( new Views\Content\Manage( $sender ) );
 	}
 	
 	private function delete( $sender ) {
 		$event->add( new Handlers\Content\Delete( $sender ) );
 	}
 }
-
