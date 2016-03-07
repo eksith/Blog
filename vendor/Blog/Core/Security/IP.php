@@ -9,6 +9,9 @@ class IP {
 	
 	private $ip;
 	
+	
+	# https://stackoverflow.com/questions/8356683/joomla-error-illegal-variable-files-or-env-or-get-or-post-or-cookie-or-s
+	
 	/**
 	 * Best effort IP address retrieval
 	 */
