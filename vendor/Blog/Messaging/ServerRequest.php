@@ -114,8 +114,8 @@ class ServerRequest extends Request
 		# TODO
 	}
 	
-	// https://secure.php.net/manual/en/wrappers.php.php
-	// Detect content type and parse as application/x-www-form-urlencoded or multipart/form-data
+	# https://secure.php.net/manual/en/wrappers.php.php
+	# Detect content type and parse as application/x-www-form-urlencoded or multipart/form-data
 	public function getBodyWithFilter( $filter ) {
 		# TODO
 	}
@@ -137,8 +137,8 @@ class ServerRequest extends Request
 		return $files;
 	}
 	
-	// https://php.net/manual/en/features.file-upload.php#114004
-	// https://php.net/manual/en/features.file-upload.post-method.php#118858
+	# https://php.net/manual/en/features.file-upload.php#114004
+	# https://php.net/manual/en/features.file-upload.post-method.php#118858
 	private function filesFromArray() {
 		$files = array();
 		
