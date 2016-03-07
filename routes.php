@@ -53,10 +53,15 @@ $router->add( 'get', 'read/:year/:month/:day/:slug', array( '\\Blog\\Routes\\Con
 $router->add( 'get', 'read/:year/:month/:day/:slug/page:page', array( '\\Blog\\Routes\\ContentRoute', 'read' ) );
 
 
+// View created posts
+$router->add( 'get', 'manage/posts', array( '\\Blog\\Routes\\ContentRoute', 'viewPosts' ) );
+$router->add( 'get', 'manage/posts/:page', array( '\\Blog\\Routes\\ContentRoute', 'viewPosts' ) );
+Blog\Routes\Route::addSecureRoute( 'manage/posts' ); // Authorized users may enter
+
 // Create post
 $router->add( 'get', 'manage/new', array( '\\Blog\\Routes\\ContentRoute', 'creatingPost' ) );
 $router->add( 'post', 'manage/new', array( '\\Blog\\Routes\\ContentRoute', 'createPost' ) );
-Blog\Routes\Route::addSecureRoute( 'manage/new' ); // Authorized users may enter
+Blog\Routes\Route::addSecureRoute( 'manage/new' ); 
 
 // Edit post
 $router->add( 'get', 'manage/edit/:id', array( '\\Blog\\Routes\\ContentRoute', 'editingPost' ) );
@@ -87,8 +92,14 @@ Blog\Routes\Route::setLogoutRoute( 'manage/logout' );
 $router->add( 'get', 'manage/profile', array( '\\Blog\\Routes\\UserRoute', 'profileView' ) );
 $router->add( 'post', 'manage/profile', array( '\\Blog\\Routes\\UserRoute', 'profileChanged' ) );
 
+// User password changed
 $router->add( 'post', 'manage/changepass', array( '\\Blog\\Routes\\UserRoute', 'passChanged' ) );
+
+// User deletion
+$router->add( 'get', 'manage/delete', array( '\\Blog\\Routes\\UserRoute', 'deleteView' ) );
+$router->add( 'post', 'manage/delete', array( '\\Blog\\Routes\\UserRoute', 'delete' ) );
 Blog\Routes\Route::addSecureRoute( 'manage/profile' );
 
+// Send the route
 $router->route( $markers );
 
