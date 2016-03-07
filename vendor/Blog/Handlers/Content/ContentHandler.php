@@ -1,5 +1,4 @@
 <?php
-<?php
 
 namespace Blog\Handlers\Content;
 use Blog\Handlers;
