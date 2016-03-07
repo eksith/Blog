@@ -42,7 +42,7 @@ class Sensor {
 		Messaging\ServerRequest $request
 	) {
 		$this->request	= $request;
-		#$this->browser	= $request->getBrowserProfile()->browser();
+		$this->browser	= $request->getBrowserProfile();
 	}
 	
 	/**
@@ -50,6 +50,7 @@ class Sensor {
 	 */
 	public function run() {
 		$this->accept( $this->methods );
+		
 		$this->checkHeaders();
 		$this->requestScan();
 		$this->uaScan();
@@ -78,7 +79,7 @@ class Sensor {
 			
 			foreach( $pre as $k => $v ) {
 				if ( $this->isearch( $pre, $v ) ) {
-					return $this->end( 'Global injection' );
+					$this->end( 'Global injection' );
 				}
 			}
 		}
@@ -117,14 +118,14 @@ class Sensor {
 		 * Accept missing. Not acceptable.
 		 */
 		if ( $this->missing( $headers, 'Accept' ) ) {
-			return $this->end( 'Invalid header' );
+			$this->end( 'Invalid header' );
 		}
 		
 		/**
 		 * No UA or it's too short
 		 */
 		if ( $this->missing( $headers, 'User-Agent', 10 ) ) {
-			return $this->end( 'Invalid user agent' );
+			$this->end( 'Invalid user agent' );
 		}
 		
 		/**
@@ -137,7 +138,7 @@ class Sensor {
 			$this->has( $headers, 'User-Agent', 'Windows ME' ) || 
 			$this->has( $headers, 'User-Agent', 'Windows XP' ) 
 		) {
-			return $this->end( 'Invalid user agent' );
+			$this->end( 'Invalid user agent' );
 		}
 	}
 	
@@ -169,6 +170,17 @@ class Sensor {
 					unset( $GLOBALS[$k] );
 				}
 			}
+		}
+	}
+	
+	/**
+	 * Scrub session
+	 */
+	private function cleanSession() {
+		if ( \session_status() === \PHP_SESSION_ACTIVE ) {
+			session_unset();
+			session_destroy();
+			session_write_close();
 		}
 	}
 	
@@ -254,6 +266,8 @@ class Sensor {
 	 */
 	private function end( $msg = '' ) {
 		$this->cleanGlobals();
+		$this->cleanSession();
+		
 		ob_start();
 		ob_end_clean();
 		die( $msg );
