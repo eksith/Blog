@@ -6,9 +6,17 @@ use Blog\Handlers;
 class Auth extends Handlers\Handler  {
 	
 	private $auth;
+	private $secure_routes;
 	
 	public function __construct( Events\Dispatcher $dispatcher ) {
 		parent::__construct( $dispatcher );
+		/*
+		$session = new BlogSession();
+		\session_set_save_handler( $session, true );
+		register_shutdown_function( 
+			'session_write_close' 
+		);
+		*/
 	}
 	
 	/**
@@ -32,9 +40,10 @@ class Auth extends Handlers\Handler  {
 		
 	}
 	
-	// https://paragonie.com/blog/2015/04/secure-authentication-php-with-long-term-persistence
 	/**
 	 * ᕙ(⇀‸↼‶)ᕗ
+	 * 
+	 * @link https://paragonie.com/blog/2015/04/secure-authentication-php-with-long-term-persistence
 	 */
 	private function authenticate() {
 		if ( empty( $_SESSION['user'] ) ) {
@@ -113,6 +122,7 @@ class Auth extends Handlers\Handler  {
 	
 	/**
 	 * Session owner and staleness marker
+	 * 
 	 * @link https://paragonie.com/blog/2015/04/fast-track-safe-and-secure-php-sessions
 	 */
 	private function sessionCanary() {
