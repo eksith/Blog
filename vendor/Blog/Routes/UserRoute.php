@@ -52,7 +52,9 @@ class UserRoute extends Route {
 	private function loginView( $sender ) {
 		$this->add( new Handlers\User\Login( $sender ) );
 		$this->add( new Handlers\User\Register( $sender ) );
+		
 		$this->add( new Views\User\Login( $sender ) );
+		$this->add( new Views\User\Manage( $sender ) );
 	}
 	
 	private function login( $sender ) {
@@ -61,7 +63,9 @@ class UserRoute extends Route {
 	
 	private function registering( $sender ) {
 		$this->add( new Handlers\User\Register( $sender ) );
+		
 		$this->add( new Views\User\Register( $sender ) );
+		$this->add( new Views\User\Manage( $sender ) );
 	}
 	
 	private function register( $sender ) {
@@ -72,7 +76,9 @@ class UserRoute extends Route {
 		$this->add( new Handlers\User\Profile( $sender ) );
 		$this->add( new Handlers\User\ChangePass( $sender ) );
 		$this->add( new Handlers\User\Delete( $sender ) );
+		
 		$this->add( new Views\User\Profile( $sender ) );
+		$this->add( new Views\User\Manage( $sender ) );
 	}
 	
 	private function profileChanged( $sender ) {
@@ -85,7 +91,9 @@ class UserRoute extends Route {
 	
 	private function deleteView( $sender ) {
 		$this->add( new Handlers\User\Delete( $sender ) );
+		
 		$this->add( new Views\User\Delete( $sender ) );
+		$this->add( new Views\User\Manage( $sender ) );
 	}
 	
 	private function delete( $sender ) {
