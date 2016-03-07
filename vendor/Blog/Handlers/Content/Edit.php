@@ -29,11 +29,13 @@ class Edit extends Handlers\Handler {
 	
 	public function editingPost( Events\Event $event ) {
 		# TODO
-		$post		= new Model\Post();
-		$post->id	= 32;
-		$post->title	= 'This is a test title';
-		$post->raw	= '<p>Some HTML in <strong>here</strong>.</p>';
-		
+		$post			= new Model\Post();
+		$post->id		= 32;
+		$post->title		= 'This is a test title';
+		$post->raw		= 
+			'<p>Some HTML in <strong>here</strong>.</p>';
+		$post->summary		= 'A short description';
+		$post->published_at	= Models\Model::myTime( time() );
 		
 		$event->set( 'post', $post );
 		$event->set(
