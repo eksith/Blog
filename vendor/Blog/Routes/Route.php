@@ -78,10 +78,16 @@ class Route {
 		}
 		
 		// Authorization handler always gets added first
-		$this->add( new Core\Auth( $this->sender ) );
+		$auth = new Core\Auth( $this->sender );
+		$this->add( $auth );
 	}
 	
-	private function isSecureRoute( $route ) {
+	protected function isSecureRoute() {
+		$route = $this->sender
+				->getRequest()
+				->getUri()
+				->getPath();
+		
 		foreach ( static::$secure_routes as $secure ) {
 			$len	= mb_strlen( $secure, '8bit' );
 			if ( 0 === strncasecmp( 
