@@ -56,7 +56,7 @@ class IP {
 	/**
 	 * Checks a given IP range in CIDR format
 	 */
-	private function rangeScan( $ips = array() ) {
+	public function rangeScan( $ips = array() ) {
 		$out = false;
 		foreach( $ips as $ip ) {
 			if ( $out = $this->cidr( $ip, $this->ip ) ) {
@@ -67,7 +67,7 @@ class IP {
 		return $out;
 	}
 	
-	private function formatIP4( $ip, $pad = '0' ) {
+	public function formatIP4( $ip, $pad = '0' ) {
 		$ip	= str_replace( '*', $pad, $ip );
 		$bits	= null;
 		$p	= strpos( $ip, '/' );
@@ -85,7 +85,7 @@ class IP {
 		return $ip . $bits;
 	}
 	
-	private function matchIP4StartToEnd( $start, &$end ) {
+	public function matchIP4StartToEnd( $start, &$end ) {
 		if ( empty( $end ) ) {
 			$end    = array();
 			$d  = explode( '.', $start );
@@ -132,14 +132,14 @@ class IP {
 	/**
 	 * TODO: Create IPv6 matching
 	 */
-	private function ip6Range( $start, $end, $ip ) {
+	public function ip6Range( $start, $end, $ip ) {
 		return false;
 	}
 	
 	/**
 	 * CIDR format IP matching
 	 */
-	private function cidr( $r, $ip ) {
+	public function cidr( $r, $ip ) {
 		list( $sub, $bits ) = explode( '/', $r );
 		
 		$ip	= ip2long( $ip );
@@ -155,7 +155,7 @@ class IP {
 	 * Converts an IP4 address to IP6.
 	 * Convenient to store as a single format
 	 */
-	private function ip4Toip6( $ip ) {
+	public function ip4Toip6( $ip ) {
 		if ( filter_var( $ip, 
 			\FILTER_VALIDATE_IP, \FILTER_FLAG_IPV6 ) ) {
 			return $this->cleanIPv6( $ip ); # Already IPv6
@@ -173,7 +173,7 @@ class IP {
 	 * 
 	 * @link http://php.net/manual/en/function.inet-pton.php
 	 */
-	private function cleanIPv6( $ip ) {
+	public function cleanIPv6( $ip ) {
 		$h  = unpack( "H*hex", inet_pton( $ip ) );
 		$ip = preg_replace( '/([A-f0-9]{4})/', "$1:", $hex['hex'] );
 		
@@ -184,7 +184,7 @@ class IP {
 	 * Checks for martians E.G. 10.0.0.0/8
 	 * These should really be blocked at the router/switch
 	 */
-	private function validateIP( $ip ) {
+	public function validateIP( $ip ) {
 		if ( filter_var(
 			$ip,
 			\FILTER_VALIDATE_IP,
