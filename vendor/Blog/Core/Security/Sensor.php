@@ -1,6 +1,7 @@
 <?php
 
 namespace Blog\Core\Security;
+use Blog\Core;
 use Blog\Messaging;
 
 class Sensor {
@@ -34,14 +35,27 @@ class Sensor {
 	private $request;
 	
 	/**
+	 * @var object App configuration
+	 */
+	private $config;
+	
+	/**
 	 * @var BrowserProfile 
 	 */
 	private $browser;
 	
+	/**
+	 * @var IP class
+	 */
+	private $ip;
+	
 	public function __construct(
-		Messaging\ServerRequest $request
+		Messaging\ServerRequest $request,
+		Core\Config $config
 	) {
 		$this->request	= $request;
+		$this->config	= $config;
+		$this->ip	= new IP();
 		$this->browser	= $request->getBrowserProfile();
 	}
 	
@@ -50,6 +64,7 @@ class Sensor {
 	 */
 	public function run() {
 		$this->accept( $this->methods );
+		$this->ipScan();
 		
 		$this->checkHeaders();
 		$this->requestScan();
@@ -86,18 +101,61 @@ class Sensor {
 	}
 	
 	/**
+	 * Scan IP blocklist
+	 */
+	private function ipScan() {
+		$ip		= $this->ip->getIP();
+		
+		if ( !$this->getSetting( 'firewall_local' ) ) {
+			if ( !$this->ip->validateIP( $ip ) ) {
+				$this->end( 'Invalid source' );
+			}
+		}
+		
+		$data		= 
+		parse_ini_file( 
+			$this->getSetting( 'firewall_ip' )
+		);
+		
+		foreach ( $data['u'] as $u ) {
+			
+		}
+	}
+	
+	/**
 	 * Scan request path for anomalies
 	 */
 	private function requestScan() {
-		$uri = $this->request->getUri()->getRawPath();
-		# TODO
+		$uri		= $this->request
+					->getUri()
+					->getRawPath();
+		$data		= 
+		parse_ini_file( 
+			$this->getSetting( 'firewall_uri' )
+		);
+		foreach ( $data['u'] as $u ) {
+			if ( false === stripos( $uri, $u ) ) {
+				continue;
+			} else {
+				$this->end( 'Invalid URI' );
+			}
+		}
 	}
 	
 	/**
 	 * Scan user agent for anomalies
 	 */
 	private function uaScan() {
-		# TODO
+		$ua		= $this->request
+					->getHeader( 'User-Agent' );
+		$headers 	= $this->request->getHeaders();
+		$data		= 
+		parse_ini_file( 
+			$this->getSetting( 'firewall_ua' )
+		);
+		if ( $this->has( $headers, 'User-Agent', $data['u'] ) ) {
+			$this->end( 'Invalid browser' );
+		}
 	}
 	
 	/**
@@ -230,10 +288,13 @@ class Sensor {
 		if ( null === $v || !$has ) {
 			return $has;
 		}
+		$chk = is_array( $h[$k] ) ? $h[$k][0] : $h[$k];
 		
 		if ( is_array( $v ) ) {
 			foreach( $v as $name ) {
-				if ( false === stripos( $name, $h[$k] ) ) {
+				if ( false === stripos( 
+					$name, $chk 
+				) ) {
 					continue;
 				} else {
 					return true;
@@ -250,15 +311,21 @@ class Sensor {
 		 * The key value should be a regular expression match
 		 */
 		if ( $regex ) {
-			return preg_match('/\b'. $v .'\b/i', $h[$k] );
+			return preg_match('/\b'. $v .'\b/i', $chk );
 		}
 		
-		$chk = is_array( $h[$k] ) ? $h[$k][0] : $h[$k];
 		if ( false === stripos( $chk, $v ) ) {
 			return false;
 		}
 		
 		return $has;
+	}
+	
+	/**
+	 * Get configuration setting
+	 */
+	private function getSetting( $name ) {
+		return $this->config->getSetting( $name );
 	}
 	
 	/**
