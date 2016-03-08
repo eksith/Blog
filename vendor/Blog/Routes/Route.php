@@ -32,9 +32,10 @@ class Route {
 	public function __construct(
 		$name,
 		$route,
-		Messaging\ServerRequest $request
+		Messaging\ServerRequest $request,
+		Events\Dispatcher $sender
 	) {
-		$this->sender	= new Events\Dispatcher( $request );
+		$this->sender	= $sender;
 		$this->event	= 
 			new Events\Event( $name, $this->sender );
 		
@@ -77,7 +78,7 @@ class Route {
 			$this->event->set( $k, $v );
 		}
 		
-		// Authorization handler always gets added first
+		# Authorization handler always gets added first
 		$auth = new Core\Auth( $this->sender );
 		$this->add( $auth );
 	}
