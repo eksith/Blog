@@ -9,6 +9,7 @@ class BrowserProfile {
 	private $sig;
 	
 	protected $sent_headers;
+	protected $m_fields;
 	
 	const SIGNATURE_HASH	= 'tiger192,4';
 	
@@ -251,11 +252,13 @@ class BrowserProfile {
 	);
 	
 	public function __construct() {
-		$sent	= array_intersect_key( 
-				$_SERVER, 
-				array_flip( $this->markers )
-			);
-		$out	= implode( ' ', array_values( $sent ) );
+		$this->m_fields	= 
+		array_intersect_key( 
+			$_SERVER, 
+			array_flip( $this->markers )
+		);
+		$out		= 
+			implode( ' ', array_values( $this->m_fields ) );
 		$this->rawsig	= $out;
 		$this->sig	= hash( self::SIGNATURE_HASH, $out );
 	}
@@ -266,7 +269,11 @@ class BrowserProfile {
 		}
 		
 		return $this->sig;
-	} 
+	}
+	
+	public function getMarkers() {
+		return $this->m_fields;
+	}
 	
 	public function headers( $key = null ) {
 		if ( !isset( $this->sent_headers ) ) {
