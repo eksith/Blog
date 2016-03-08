@@ -1,16 +1,25 @@
 <?php
 
-// Example routes
-// Change this to suit your own blog structure
+# Example routes
+# Change this to suit your own blog structure
 
-// Prepare request
+# Prepare request
 $request	= new Blog\Messaging\ServerRequest();
 
-// Prepare firewall
-$firewall	= new Blog\Core\Security\Sensor( $request );
+# Prepare crypto
+$crypto		= new Blog\Core\Crypto();
+
+# Prepare configuration
+$config		= new Blog\Core\Config( $crypto );
+
+# Prepare and run firewall
+$firewall	= new Blog\Core\Security\Sensor( $request, $config );
 $firewall->run();
 
-// Placeholder markers (doubles as variable names passed to routes)
+# Event dispatcher
+$sender		= new Blog\Events\Dispatcher( $request, $crypto, $config );
+
+# Placeholder markers (doubles as variable names passed to routes)
 $markers	= 
 array(
 	'*'	=> '(?<all>.+?)',
@@ -26,15 +35,16 @@ array(
 	':taxo'	=> '(?<taxo>blogs|boards|threads|forumposts|wiki|tags)'
 );
 
-// Create router with current request
-$router		= new Blog\Core\Router( $request );
+# Create router with current request
+$router		= new Blog\Core\Router( $request, $sender );
 
-// Index routes
+
+# Index routes
 $router->add( 'get', '', array( '\\Blog\\Routes\\HomeRoute', 'index' ) );
 $router->add( 'get', 'page:page', array( '\\Blog\\Routes\\HomeRoute', 'index' ) );
 
 
-// Archives
+# Archives
 $router->add( 'get', 'archive/:year', array( '\\Blog\\Routes\\ContentRoute', 'archive' ) );
 $router->add( 'get', 'archive/:year/page:page', array( '\\Blog\\Routes\\ContentRoute', 'archive' ) );
 
@@ -44,62 +54,62 @@ $router->add( 'get', 'archive/:year/:month/page:page', array( '\\Blog\\Routes\\C
 $router->add( 'get', 'archive/:year/:month/:day', array( '\\Blog\\Routes\\ContentRoute', 'archive' ) );
 $router->add( 'get', 'archive/:year/:month/:day/page:page', array( '\\Blog\\Routes\\ContentRoute', 'archive' ) );
 
-// Read by post id
+# Read by post id
 $router->add( 'get', 'read/:id', array( '\\Blog\\Routes\\ContentRoute', 'read' ) );
 $router->add( 'get', 'read/:id/page:page', array( '\\Blog\\Routes\\ContentRoute', 'read' ) );
 
-// Read by date and slug (if duplicates are found, show oldest first)
+# Read by date and slug (if duplicates are found, show oldest first)
 $router->add( 'get', 'read/:year/:month/:day/:slug', array( '\\Blog\\Routes\\ContentRoute', 'read' ) );
 $router->add( 'get', 'read/:year/:month/:day/:slug/page:page', array( '\\Blog\\Routes\\ContentRoute', 'read' ) );
 
 
-// View created posts
+# View created posts
 $router->add( 'get', 'manage/posts', array( '\\Blog\\Routes\\ContentRoute', 'viewPosts' ) );
 $router->add( 'get', 'manage/posts/:page', array( '\\Blog\\Routes\\ContentRoute', 'viewPosts' ) );
-Blog\Routes\Route::addSecureRoute( 'manage/posts' ); // Authorized users may enter
+Blog\Routes\Route::addSecureRoute( 'manage/posts' ); # Authorized users may enter
 
-// Create post
+# Create post
 $router->add( 'get', 'manage/new', array( '\\Blog\\Routes\\ContentRoute', 'creatingPost' ) );
 $router->add( 'post', 'manage/new', array( '\\Blog\\Routes\\ContentRoute', 'createPost' ) );
 Blog\Routes\Route::addSecureRoute( 'manage/new' ); 
 
-// Edit post
+# Edit post
 $router->add( 'get', 'manage/edit/:id', array( '\\Blog\\Routes\\ContentRoute', 'editingPost' ) );
 $router->add( 'post', 'manage/edit/:id', array( '\\Blog\\Routes\\ContentRoute', 'editPost' ) );
 Blog\Routes\Route::addSecureRoute( 'manage/edit' );
 
-// Delete post
+# Delete post
 $router->add( 'get', 'manage/delete/:id', array( '\\Blog\\Routes\\ContentRoute', 'deletingPost' ) );
 $router->add( 'post', 'manage/delete/:id', array( '\\Blog\\Routes\\ContentRoute', 'deletePost' ) );
 Blog\Routes\Route::addSecureRoute( 'manage/delete' );
 
 
-// User login
+# User login
 $router->add( 'get', 'manage/login', array( '\\Blog\\Routes\\UserRoute', 'loggingIn' ) );
 $router->add( 'post', 'manage/login', array( '\\Blog\\Routes\\UserRoute', 'login' ) );
 Blog\Routes\Route::setLoginRoute( 'manage/login' );
 
-// User register
+# User register
 $router->add( 'get', 'manage/register', array( '\\Blog\\Routes\\UserRoute', 'registering' ) );
 $router->add( 'post', 'manage/register', array( '\\Blog\\Routes\\UserRoute', 'register' ) );
 Blog\Routes\Route::setRegisterRoute( 'manage/register' );
 
-// User logout
+# User logout
 $router->add( 'get', 'manage/logout', array( '\\Blog\\Routes\\UserRoute', 'logout' ) );
 Blog\Routes\Route::setLogoutRoute( 'manage/logout' );
 
-// User Profile
+# User Profile
 $router->add( 'get', 'manage/profile', array( '\\Blog\\Routes\\UserRoute', 'profileView' ) );
 $router->add( 'post', 'manage/profile', array( '\\Blog\\Routes\\UserRoute', 'profileChanged' ) );
 
-// User password changed
+# User password changed
 $router->add( 'post', 'manage/changepass', array( '\\Blog\\Routes\\UserRoute', 'passChanged' ) );
 
-// User deletion
-$router->add( 'get', 'manage/delete', array( '\\Blog\\Routes\\UserRoute', 'deleteView' ) );
-$router->add( 'post', 'manage/delete', array( '\\Blog\\Routes\\UserRoute', 'delete' ) );
+# User deletion
+$router->add( 'get', 'manage/deleteuser', array( '\\Blog\\Routes\\UserRoute', 'deleteView' ) );
+$router->add( 'post', 'manage/deleteuser', array( '\\Blog\\Routes\\UserRoute', 'delete' ) );
 Blog\Routes\Route::addSecureRoute( 'manage/profile' );
 
-// Send the route
+# Send the route
 $router->route( $markers );
 
