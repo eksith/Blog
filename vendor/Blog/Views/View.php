@@ -182,11 +182,41 @@ class View extends Handlers\Handler {
 		$node->parentNode->replaceChild( $elem, $node );
 	}
 	
+	protected function buildNodes( $node, \DOMNode $out ) {
+		if ( !$node->hasChildNodes() ) { return; }
+		$children	= $node->childNodes;
+		
+		foreach( $children as $c ) {
+			if ( $c->nodeType == \XML_ELEMENT_NODE ) {
+				$create = 
+				$out->ownerDocument->createElement( 
+					$c->nodeName 
+				);
+				if ( $node->hasAttributes() ) {
+				//	$this->copyAttributes( $c, $create );
+				}
+				$out->appendChild( $create );
+				$this->buildNodes( $node, $create );
+			}
+		}
+	}
+	
+	protected function copyAttributes( $node, \DOMNode $out ) {
+		foreach ( 
+			\iterator_to_array( $node->attributes ) as $at
+		) {
+			$n = $at->nodeName;
+			$v = $at->nodeValue;
+			$out->setAttribute( $n, $v );
+		}
+	}
+	
 	/**
 	 * Gets the inner HTML of an element including any child nodes
 	 */
 	protected function innerHTML( &$node ) {
 		if ( !$node->hasChildNodes() ) { return ''; }
+		
 		$html		= '';
 		$children	= $node->childNodes;
 		foreach( $children as $c ) {
@@ -300,7 +330,6 @@ class View extends Handlers\Handler {
 			}
 			$node->parentNode->removeChild( $node );
 		}
-		
 		$this->loadIncludes( $conds, $dom );
 	}
 	
@@ -341,7 +370,6 @@ class View extends Handlers\Handler {
 			$html	= $this->formatLoop( $node, $dom );
 			$this->swapHTML( $html, $node, $dom );
 		}
-		
 		$this->loadIncludes( $conds, $dom );
 	}
 	
@@ -405,6 +433,10 @@ class View extends Handlers\Handler {
 		$data				= 
 			$this->loadFile( $tpl );
 		
+		if ( empty( $data ) ) {
+			return;
+		}
+		
 		$err				= 
 			\libxml_use_internal_errors( true );
 		
@@ -422,8 +454,11 @@ class View extends Handlers\Handler {
 			\LIBXML_NOXMLDECL
 		);
 		
+		
 		// Parse pre-include conditions
 		$this->parseConditions( $conds, $dom );
+		
+		$this->loadIncludes( $conds, $dom );
 		
 		// Loop through items
 		$this->parseLoops( $conds, $dom );
@@ -507,6 +542,35 @@ class View extends Handlers\Handler {
 		}
 		
 		return $map;
+	}
+	
+	protected function menuBuilder(
+		Events\Event $event, 
+		&$conds	= array()
+	) {
+		$main_menu	= $event->get( 'main_menu' );
+		if ( empty( $main_menu ) ) {
+			$conds['main_menu']	= 'no';
+		} else {
+			$conds['main_menu']	= 'yes';
+			$this->addState( 'main_menu', $main_menu );
+		}
+		
+		$side_menu	= $event->get( 'side_menu' );
+		if ( empty( $side_menu ) ) {
+			$conds['side_menu']	= 'no';
+		} else {
+			$conds['side_menu']	= 'yes';
+			$this->addState( 'side_menu', $side_menu );
+		}
+		
+		$pagination	= $event->get( 'pagination' );
+		if ( empty( $side_menu ) ) {
+			$conds['pagination']	= 'no';
+		} else {
+			$conds['pagination']	= 'yes';
+			$this->addState( 'pagination', $pagination );
+		}
 	}
 	
 	protected function preamble() {
