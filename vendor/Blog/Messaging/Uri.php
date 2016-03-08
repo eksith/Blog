@@ -208,7 +208,7 @@ class Uri extends Immutable implements \Psr\Http\Message\UriInterface {
 			function( array $match ) {
 				return rawurlencode( $match[0] );
 			},
-			$path
+			$part
 		);
 	}
 	
