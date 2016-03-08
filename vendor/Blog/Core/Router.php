@@ -2,17 +2,21 @@
 
 namespace Blog\Core;
 use Blog\Messaging;
+use Blog\Events;
 
 class Router {
 	
 	private $request;
+	private $sender;
 	
 	private static $routes	= array();
 	
 	public function __construct(	
-		Messaging\ServerRequest $request
+		Messaging\ServerRequest $request,
+		Events\Dispatcher $sender
 	) {
-		$this->request = $request;
+		$this->request	= $request;
+		$this->sender	= $sender;
 	}
 	
 	public function add( $verb, $path, $route ) {
@@ -55,7 +59,8 @@ class Router {
 		$handle = new $handler[0](
 				$handler[1],
 				$route,
-				$this->request
+				$this->request,
+				$this->sender
 			);
 		$handle->route( $params );
 	}
