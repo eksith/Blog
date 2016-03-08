@@ -46,44 +46,53 @@ class ContentRoute extends Route {
 	
 	private function archive( $sender ) {
 		$this->add( new Handlers\Content\Index( $sender ) );
+		$this->add( new Handlers\Menu( $sender ) );
+		
 		$this->add( new Views\Content\Index( $sender ) );
+		$this->add( new Views\Content\Front( $sender ) );
 	}
 	
 	private function read( $sender ) {
 		$this->add( new Handlers\Content\Read( $sender ) );
+		$this->add( new Handlers\Menu( $sender ) );
+		
 		$this->add( new Views\Content\Read( $sender ) );
+		$this->add( new Views\Content\Front( $sender ) );
 	}
 	
 	private function creating( $sender ) {
-		$event->add( new Handlers\Content\Create( $sender ) );
-		$event->add( new Views\Content\Create( $sender ) );
+		$this->add( new Handlers\Content\Create( $sender ) );
+		$this->add( new Handlers\Menu( $sender ) );
 		
+		$this->add( new Views\Content\Create( $sender ) );
 		$this->add( new Views\Content\Manage( $sender ) );
 	}
 	
 	private function create( $sender ) {
-		$event->add( new Handlers\Content\Create( $sender ) );
+		$this->add( new Handlers\Content\Create( $sender ) );
 	}
 	
 	private function editing( $sender ) {
-		$event->add( new Handlers\Content\Edit( $sender ) );
-		$event->add( new Views\Content\Edit( $sender ) );
+		$this->add( new Handlers\Content\Edit( $sender ) );
+		$this->add( new Handlers\Menu( $sender ) );
 		
+		$this->add( new Views\Content\Edit( $sender ) );
 		$this->add( new Views\Content\Manage( $sender ) );
 	}
 	
 	private function edit( $sender ) {
-		$event->add( new Handlers\Content\Edit( $sender ) );
+		$this->add( new Handlers\Content\Edit( $sender ) );
 	}
 	
 	private function deleting( $sender ) {
-		$event->add( new Handlers\Content\Delete( $sender ) );
-		$event->add( new Views\Content\Delete( $sender ) );
+		$this->add( new Handlers\Content\Delete( $sender ) );
+		$this->add( new Handlers\Menu( $sender ) );
 		
+		$this->add( new Views\Content\Delete( $sender ) );
 		$this->add( new Views\Content\Manage( $sender ) );
 	}
 	
 	private function delete( $sender ) {
-		$event->add( new Handlers\Content\Delete( $sender ) );
+		$this->add( new Handlers\Content\Delete( $sender ) );
 	}
 }
