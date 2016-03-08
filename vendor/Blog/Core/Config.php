@@ -27,7 +27,7 @@ final class Config {
 		foreach ( $names as $name ) {
 			$values[$name] = 
 				isset( $this->settings[$name] ) ? 
-					$this->settings[$name] : null
+					$this->settings[$name] : null;
 		}
 		
 		return $values;
