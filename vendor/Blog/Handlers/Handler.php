@@ -131,7 +131,7 @@ class Handler extends Events\Listener {
 	/**
 	 * Anti-XSS request token generator
 	 */
-	protected function genCsrf( $form, Events\Event $event ) {
+	protected function getCsrf( $form, Events\Event $event ) {
 		$session	= $event->get( 'session_id' );
 		$sig		= $this->getSignature();
 		$crypto		= $this->getCrypto();
