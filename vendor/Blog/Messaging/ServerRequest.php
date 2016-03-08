@@ -3,7 +3,7 @@
 namespace Blog\Messaging;
 use Blog\Core;
 
-// http://www.php-fig.org/psr/psr-7/
+# http://www.php-fig.org/psr/psr-7/
 class ServerRequest extends Request 
 	implements \Psr\Http\Message\ServerRequestInterface {
 		
