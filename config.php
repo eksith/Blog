@@ -21,6 +21,12 @@ define( 'CONFIG', <<<JSON
 	"enable_register"	: true,
 	"enable_login"		: true,
 	
+	"firewall_ua"		: "|PATH|data\/ua.ini",
+	"firewall_uri"		: "|PATH|data\/uri.ini",
+	"firewall_ip"		: "|PATH|data\/ip.ini",
+	"firewall_bots"		: "|PATH|data\/bots.ini",
+	"firewall_local"	: true,
+	
 	"list_per_page"		: 20,
 	"posts_per_page"	: 15,
 	"data_timeout"		: 10,
