@@ -43,14 +43,14 @@ define( 'CONFIG', <<<JSON
 	"cookie_name"		: "site",
 	"cookie_secure"		: false,
 	"cookie_hash"		: "tiger160,4",
-	"cookie_rounds"		: 200,
+	"cookie_rounds"		: 1000,
 	"cookie_salt"		: 16,
 	"cookie_time"		: 2592000,
 	"cookie_path"		: "\/",
 	
 	"session_hash"		: "tiger160,4",
 	"sesssion_key"		: 12,
-	"session_time"		: 20,
+	"session_time"		: 12000,
 	
 	"visit_key"		: 6,
 	
