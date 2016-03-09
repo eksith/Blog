@@ -144,7 +144,7 @@ class Handler extends Events\Listener {
 		return $crypto->genPbk(
 			$algo,
 			$form . $session . $sig,
-			$crypto->bytes( $salt ),
+			bin2hex( $crypto->bytes( $salt ) ),
 			$rounds,
 			$size 
 		);
@@ -164,5 +164,9 @@ class Handler extends Events\Listener {
 		return $this->getCrypto()->verifyPbk(
 			$form . $session . $sig, $hash
 		);
+	}
+	
+	protected function redirect( $url, $code = 200 ) {
+		# TODO safely redirect 
 	}
 }
