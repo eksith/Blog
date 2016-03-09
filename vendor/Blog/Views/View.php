@@ -458,7 +458,7 @@ class View extends Handlers\Handler {
 		// Parse pre-include conditions
 		$this->parseConditions( $conds, $dom );
 		
-		$this->loadIncludes( $conds, $dom );
+		#$this->loadIncludes( $conds, $dom );
 		
 		// Loop through items
 		$this->parseLoops( $conds, $dom );
