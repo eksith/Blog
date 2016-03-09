@@ -39,7 +39,7 @@ class HtmlFilter {
 		'sup'		=> array( 'style', 'class' ),
 		'sub'		=> array( 'style', 'class' ),
 		
-		// Took out 'rel' and 'title', because we're using those below
+		# Took out 'rel' and 'title', because we're using those below
 		'a'		=> array( 'style', 'class', 'href' ),
 		
 		'img'		=> array( 'style', 'class', 'src', 'height', 
@@ -61,7 +61,7 @@ class HtmlFilter {
 		'abbr'		=> array( 'style', 'class' ),
 		'blockquote'	=> array( 'style', 'class' ),
 		
-		// Stripped out
+		# Stripped out
 		'body'		=> array()
 		);
 	
@@ -75,7 +75,7 @@ class HtmlFilter {
 	 */
 	public function clean( $html, $parse = true ) {
 		
-		$err		= libxml_use_internal_errors( true );
+		$err		= \libxml_use_internal_errors( true );
 		if ( $parse ) {
 			$html = $this->getParsedown()->text( $html );
 		}
@@ -84,22 +84,26 @@ class HtmlFilter {
 				);
 		
 		$html		=  $this->tidyup( $html );
+		
 		$old		= new \DOMDocument();
 		$old->loadXML( $html );
 		
-		$oldBody	= $old->getElementsByTagName( 'body' )->item( 0 );
+		
+		$oldBody	= 
+			$old->getElementsByTagName( 'body' )->item( 0 );
 		
 		$out		= new \DOMDocument();
-		$outBody	= $out->appendChild( $out->createElement( 'body' ) );
+		$outBody	= 
+			$out->appendChild( $out->createElement( 'body' ) );
 		
 		$this->scrub( $oldBody, $outBody );
 		$clean		= '';
 		foreach ( $outBody->childNodes as $node ) {
-			$clean .= $out->saveXML( $node );
+			$clean .= $out->saveHTML( $node );
 		}
 		
-		libxml_clear_errors();
-		libxml_use_internal_errors( $err );
+		\libxml_clear_errors();
+		\libxml_use_internal_errors( $err );
 		return trim( $clean );
 	}
 	
@@ -124,19 +128,20 @@ class HtmlFilter {
 				} else {
 					$clean = 
 					$out->ownerDocument->createElement( 
-						$node->nodeName 
+						$node->nodeName,
+						$node->textContent
 					);
 				}
 				
 				$this->cleanAttributes( $node, $clean );
 				$out->appendChild( $clean );
 				
-				// Continue to other tags
+				# Continue to other tags
 				$this->scrub( $node, $clean );
 				
-			} elseif( $node->nodeType == \XML_ELEMENT_NODE ) {
-				// This tag isn't on the whitelist
-				// Extract interior. Add as plaintext
+			} elseif ( $node->nodeType == \XML_ELEMENT_NODE ) {
+				# This tag isn't on the whitelist
+				# Extract interior. Add as plaintext
 				$text	= 
 				$out->ownerDocument->createTextNode(
 					$this->entities( $node->textContent )
@@ -236,7 +241,7 @@ class HtmlFilter {
 			'join-styles'			=> 1,
 			'output-xhtml'			=> 1,
 			'merge-spans'			=> 1,
-			'show-body-only'		=> 1,
+			'show-body-only'		=> 0,
 			'wrap'				=> 0
 		);
 		
