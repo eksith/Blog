@@ -16,9 +16,7 @@ class BrowserProfile {
 	private $markers = 
 	array(
 		'HTTP_ACCEPT_CHARSET',
-		'HTTP_ACCEPT_ENCODING',
 		'HTTP_ACCEPT_LANGUAGE',
-		'HTTP_CONNECTION',
 		'HTTP_USER_AGENT',
 		'HTTP_VIA',
 		
@@ -28,7 +26,6 @@ class BrowserProfile {
 		'HTTP_UPGRADE_INSECURE_REQUESTS',
 		'HTTP_PROXY_AUTHORIZATION',
 		'HTTP_HOST',
-		'HTTP_TE',
 		'HTTP_MVNO',
 		
 		'HTTP_VERSION',
@@ -259,6 +256,7 @@ class BrowserProfile {
 		);
 		$out		= 
 			implode( ' ', array_values( $this->m_fields ) );
+		
 		$this->rawsig	= $out;
 		$this->sig	= hash( self::SIGNATURE_HASH, $out );
 	}
@@ -283,6 +281,7 @@ class BrowserProfile {
 		if ( null == $key ) {
 			return $this->sent_headers;
 		}
+		
 		return isset( $this->sent_headers[$key] )? 
 			$this->sent_headers[$key] : null;
 	}
