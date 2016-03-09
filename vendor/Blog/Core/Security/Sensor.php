@@ -22,7 +22,7 @@ class Sensor {
 	/**
 	 * @var array Whitelist of acceptable methods
 	 */
-	private $methods 	= array( 'get', 'head', 'post', 'put' );
+	private $methods 	= array( 'get', 'head', 'post' );
 	
 	/**
 	 * @var array Whitelist of acceptable ports
@@ -40,6 +40,11 @@ class Sensor {
 	private $config;
 	
 	/**
+	 * @var object Cryptography
+	 */
+	private $crypto;
+	
+	/**
 	 * @var BrowserProfile 
 	 */
 	private $browser;
@@ -51,12 +56,17 @@ class Sensor {
 	
 	public function __construct(
 		Messaging\ServerRequest $request,
-		Core\Config $config
+		Core\Config $config,
+		Core\Crypto $crypto
 	) {
 		$this->request	= $request;
 		$this->config	= $config;
+		$this->crypto	= $crypto;
+		
 		$this->ip	= new IP();
 		$this->browser	= $request->getBrowserProfile();
+		
+		$this->sessionCheck();
 	}
 	
 	/**
@@ -64,11 +74,16 @@ class Sensor {
 	 */
 	public function run() {
 		$this->accept( $this->methods );
-		$this->ipScan();
-		
-		$this->checkHeaders();
 		$this->requestScan();
-		$this->uaScan();
+		
+		# Prevent redundant scans if it's the same user
+		if ( $this->expired( $this->request->getHeaders() ) ) {
+			$this->ipScan();
+			$this->checkHeaders();
+			$this->uaScan();
+		}
+		
+		$this->bodyScan();
 	}
 	
 	/**
@@ -101,10 +116,52 @@ class Sensor {
 	}
 	
 	/**
+	 * Check if a scan is needed from the last time using headers
+	 */
+	private function expired( $headers ) {
+		$skip	= 
+		array(
+			'Accept-Datetime',
+			'Accept-Encoding',
+			'Content-Length',
+			'Cache-Control',
+			'Content-Type',
+			'Content-Md5',
+			'Referer',
+			'Cookie',
+			'Expect',
+			'Date',
+			'TE'
+		);
+		
+		$search	= array_intersect_key( 
+				array_keys( $headers ), 
+				array_reverse( $skip ) 
+			);
+		$match	= $this->ip->getIP();
+		
+		foreach ( $headers as $k => $v ) {
+			$match .= $v[0];
+		}
+		
+		$hash	= hash( 'tiger192,4', $match );
+		
+		if ( \session_status() === \PHP_SESSION_ACTIVE ) {
+			$org = isset( $_SESSION[$hash] ) ? 
+					true : false;
+			
+			$_SESSION[$hash] = true;
+			return $org;
+		}
+		
+		return true;
+	}
+	
+	/**
 	 * Scan IP blocklist
 	 */
 	private function ipScan() {
-		$ip		= $this->ip->getIP();
+		$ip		= strtolower( $this->ip->getIP() );
 		
 		if ( !$this->getSetting( 'firewall_local' ) ) {
 			if ( !$this->ip->validateIP( $ip ) ) {
@@ -113,12 +170,15 @@ class Sensor {
 		}
 		
 		$data		= 
-		parse_ini_file( 
+		\parse_ini_file( 
 			$this->getSetting( 'firewall_ip' )
 		);
 		
 		foreach ( $data['u'] as $u ) {
-			
+			if ( 0 === strncmp( $ip, $u, strlen( $u ) ) ) {
+				# $this->end( 'Denied' );
+				$this->end();
+			}
 		}
 	}
 	
@@ -130,14 +190,15 @@ class Sensor {
 					->getUri()
 					->getRawPath();
 		$data		= 
-		parse_ini_file( 
+		\parse_ini_file( 
 			$this->getSetting( 'firewall_uri' )
 		);
 		foreach ( $data['u'] as $u ) {
 			if ( false === stripos( $uri, $u ) ) {
 				continue;
 			} else {
-				$this->end( 'Invalid URI' );
+				# $this->end( 'Invalid URI' );
+				$this->end();
 			}
 		}
 	}
@@ -150,9 +211,10 @@ class Sensor {
 					->getHeader( 'User-Agent' );
 		$headers 	= $this->request->getHeaders();
 		$data		= 
-		parse_ini_file( 
+		\parse_ini_file( 
 			$this->getSetting( 'firewall_ua' )
 		);
+		
 		if ( $this->has( $headers, 'User-Agent', $data['u'] ) ) {
 			$this->end( 'Invalid browser' );
 		}
@@ -165,7 +227,7 @@ class Sensor {
 		# TODO
 	}
 	
-	// https://eksith.wordpress.com/2013/11/04/firewall-php/
+	# https://eksith.wordpress.com/2013/11/04/firewall-php/
 	
 	/**
 	 * Check sent headers for unusual characteristics
@@ -240,6 +302,69 @@ class Sensor {
 			session_destroy();
 			session_write_close();
 		}
+	}
+	
+	private function getSignature() {
+		return $this->browser->getSignature();
+	}
+	
+	/**
+	 * First visit session initialization
+	 */
+	private function session( $reset = false ) {
+		if ( 
+			\session_status() === \PHP_SESSION_ACTIVE && 
+			!$reset 
+		) {
+			return;
+		}
+		
+		if ( \session_status() != \PHP_SESSION_ACTIVE ) {
+			session_start();
+		}
+		if ( $reset ) {
+			\session_regenerate_id( true );
+			foreach ( array_keys( $_SESSION ) as $k ) {
+				unset( $_SESSION[$k] );
+			}
+		}
+	}
+	
+	/**
+	 * Check session staleness
+	 */
+	private function sessionCheck( $reset = false ) {
+		$this->session( $reset );
+		
+		if ( empty( $_SESSION['canary'] ) ) {
+			$this->sessionCanary();
+			return;
+		}
+		
+		if ( 
+			time() > ( int ) $_SESSION['canary']['exp']
+		) {
+			\session_regenerate_id( true );
+			$this->sessionCanary();
+		}
+	}
+	
+	/**
+	 * Session owner and staleness marker
+	 * 
+	 * @link https://paragonie.com/blog/2015/04/fast-track-safe-and-secure-php-sessions
+	 */
+	private function sessionCanary() {
+		$key	= $this->config->getSetting( 'visit_key' );
+		$bytes	= $this->crypto->bytes( $key );
+		
+		$_SESSION['canary'] = array(
+			'exp'	=> 
+			time() + 
+			$this->config->getSetting( 'session_time' ),
+			
+			'visit'	=> bin2hex( $bytes )
+		);
 	}
 	
 	/**
