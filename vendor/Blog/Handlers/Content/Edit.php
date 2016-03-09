@@ -10,8 +10,8 @@ class Edit extends Handlers\Handler {
 	private $filter = array(
 		'csrf'		=> \FILTER_SANITIZE_ENCODED,
 		'id'		=> \FILTER_VALIDATE_INT,
-		'title'		=> \FILTER_SANITIZE_ENCODED,
-		'publish'	=> \FILTER_SANITIZE_ENCODED,
+		'title'		=> \FILTER_SANITIZE_FULL_SPECIAL_CHARS,
+		'publish'	=> \FILTER_SANITIZE_STRING,
 		'summary'	=> \FILTER_UNSAFE_RAW,
 		'body'		=> \FILTER_UNSAFE_RAW,
 		'status'	=> 
@@ -20,20 +20,20 @@ class Edit extends Handlers\Handler {
 				'flags'		=> \FILTER_REQUIRE_ARRAY,
 				'options'	=> 
 				array(
-					'default'	=> POST_STATUS_OPEN,
-					'min_range'	=> POST_STATUS_BURIED,
-					'max_range'	=> POST_STATUS_FCLOSED
+					'default'	=> 0,
+					'min_range'	=> -1,
+					'max_range'	=> 99
 				)
 			)
 	);
 	
 	public function editingPost( Events\Event $event ) {
 		# TODO
-		$post			= new Model\Post();
+		$post			= new Models\Post();
 		$post->id		= 32;
 		$post->title		= 'This is a test title';
 		$post->raw		= 
-			'<p>Some HTML in <strong>here</strong>.</p>';
+			'Some HTML in <strong>here</strong>';
 		$post->summary		= 'A short description';
 		$post->published_at	= Models\Model::myTime( time() );
 		
@@ -47,7 +47,57 @@ class Edit extends Handlers\Handler {
 	public function editPost( Events\Event $event ) {
 		# TODO
 		$data = filter_input_array( \INPUT_POST, $this->filter );
+		$csrf = $this->verifyCsrf( 
+				$data['csrf'], 'editpost', $event 
+			);
 		
-		var_dump( $data );
+		if ( $csrf ) {
+			$this->save( $data );
+		} else {
+			$this->redirect( '/', 401 );
+		}
+	}
+	
+	private function findPost( $id ) {
+		# TODO
+		$post = new Models\Post();
+		
+		$post->id = $id;
+		return $post;
+	}
+	
+	private function save( $data ) {
+		$filter			= $this->getHtmlFilter();
+		
+		$data['id']		= empty( $data['id'] ) ?
+			0 : abs( ( int ) $data['id'] );
+		
+		if ( empty( $data['id'] ) ) {
+			$this->redirect( '/', 401 );
+		}
+		
+		$post			= 
+			$this->findPost( $data['id'] );
+		
+		if ( empty( $post ) ) {
+			# No post found matching that
+			$this->redirect( '/', 304 );
+		}
+		
+		$post->id		= $data['id'];
+		$post->title		= empty( $data['title'] ) ?
+			'Untitled' : $data['title'];
+		
+		$post->raw		= empty( $data['body'] ) ? 
+			'' : $data['body'];
+		
+		$post->summary		= empty( $data['summary'] ) ? 
+			'' : $filter->clean( $data['summary'], false );
+		
+		$post->body		= $filter->clean( $post->raw );
+		$post->plain		= strip_tags( $post->body );
+		
+		$post->save();
+		$this->redirect( '/manage/edit/' . $post->id, 205 );
 	}
 }
