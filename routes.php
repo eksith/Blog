@@ -13,11 +13,15 @@ $crypto		= new Blog\Core\Crypto();
 $config		= new Blog\Core\Config( $crypto );
 
 # Prepare and run firewall
-$firewall	= new Blog\Core\Security\Sensor( $request, $config );
+$firewall	= new Blog\Core\Security\Sensor( 
+			$request, $config, $crypto
+		);
 $firewall->run();
 
 # Event dispatcher
-$sender		= new Blog\Events\Dispatcher( $request, $crypto, $config );
+$sender		= new Blog\Events\Dispatcher(
+			$request, $crypto, $config
+		);
 
 # Placeholder markers (doubles as variable names passed to routes)
 $markers	= 
