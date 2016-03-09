@@ -200,6 +200,13 @@ final class Crypto {
 		return bin2hex( substr( $out, 0, $kl ) );
 	}
 	
+	public function equals( $str1, $str2 ) {
+		if ( function_exists( 'hash_equals' ) ) {
+			return \hash_equals( $str1, $str2 );
+		}
+		return substr_count( $str1 ^ $str2, "\0") * 2 === strlen( $str1 . $str2 );
+	}
+	
 	public function genPbk(
 		$algo	= 'tiger160,4', 
 		$txt,
@@ -214,7 +221,7 @@ final class Crypto {
 		
 		$key	= $this->pbk( $algo, $txt, $salt, $rounds, $kl );
 		$out	= array(
-				$algo, $txt, $salt, $rounds, $kl, $key
+				$algo, $salt, $rounds, $kl, $key
 			);
 		
 		return 
@@ -228,7 +235,6 @@ final class Crypto {
 		) {
 			return false;
 		}
-		
 		$key	= base64_decode( $hash, true );
 		if ( false === $key ) {
 			return false;
@@ -238,19 +244,19 @@ final class Crypto {
 		if ( empty( $k ) || empty( $txt ) ) {
 			return false;
 		}
-		if ( count( $k ) != 6 ) {
+		if ( count( $k ) != 5 ) {
 			return false;
 		}
 		if ( !in_array( $k[0], \hash_algos() , true ) ) {
 			return false;
 		}
 		
-		$pbk	= 
-		\hash_pbkdf2( 
-			$k[0], $txt, ( int ) $k[2], $k[3], $k[4] 
-		);
+		$pbk	= $this->pbk( 
+				$k[0], $txt, $k[1], ( int ) $k[2], 
+				( int ) $k[3] 
+			);
 		
-		return \hash_equals( $this->cleanPbk( $k[5] ), $pbk );
+		return $this->equals( $this->cleanPbk( $k[4] ),  $pbk );
 	}
 	
 	private function cleanPbk( $hash ) {
