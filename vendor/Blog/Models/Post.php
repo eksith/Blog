@@ -83,7 +83,7 @@ class Post extends Model {
 	public $published_at;
 	
 	public function __construct( $data = array() ) {
-		parent::getIsset( $this, $data );
+		parent::ifIsset( $this, $data );
 	}
 	
 	public function save() {
