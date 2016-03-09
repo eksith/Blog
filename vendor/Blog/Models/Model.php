@@ -53,15 +53,15 @@ class Model {
 	/**
 	 * @var array Connection store of PDO objects
 	 */
-	private static $db	= array();
+	protected static $db	= array();
 	
 	public function __destruct() {
 		static::$db	= null;
 	}
 	
 	protected static function getDb( $name = 'content_store' ) {
-		if ( isset( self::$db[$name] ) ) {
-			return self::$db[$name];
+		if ( isset( static::$db[$name] ) ) {
+			return static::$db[$name];
 		}
 		
 		$name	= static::$config->getSetting( $name );
@@ -77,9 +77,8 @@ class Model {
 			\PDO::ATTR_ERRMODE		=> 
 				\PDO::ERRMODE_EXCEPTION
 		);
-		$type	= $this->dbType( $dsn );
-		$dsn	= 
-			$this->dsn( $name, $username, $password );
+		$type	= self::dbType( $dsn );
+		$dsn	= self::dsn( $name, $username, $password );
 			
 		static::$db[$name]	= 
 			new \PDO( $dsn, $username, $password, $options );
@@ -318,7 +317,7 @@ class Model {
 	/**
 	 * Extract the username and password from the DSN and rebuild
 	 */
-	private function dsn(
+	private static function dsn(
 		$dsn,
 		&$username = null,
 		&$password = null
@@ -380,7 +379,7 @@ class Model {
 	 * Useful for database specific SQL.
 	 * Expand as necessary.
 	 */
-	private function dbType( $dsn ) {
+	private static function dbType( $dsn ) {
 		if ( 0 === strpos( $dsn, 'mysql' ) ) {
 			return 'mysql';
 		} elseif ( 0 === strpos( $dsn, 'postgres' ) ) {
