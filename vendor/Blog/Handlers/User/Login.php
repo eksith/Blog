@@ -8,7 +8,7 @@ class Login extends Handlers\Handler {
 	
 	private $filter = array(
 		'csrf'		=> \FILTER_SANITIZE_ENCODED,
-		'username'	=> \FILTER_SANITIZE_ENCODED,
+		'username'	=> \FILTER_SANITIZE_FULL_SPECIAL_CHARS,
 		'password'	=> \FILTER_UNSAFE_RAW,
 		'status'	=> 
 		array(
@@ -32,5 +32,6 @@ class Login extends Handlers\Handler {
 	
 	public function login( Events\Event $event ) {
 		# TODO
+		$data = filter_input_array( \INPUT_POST, $this->filter );
 	}
 }
