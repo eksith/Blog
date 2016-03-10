@@ -8,7 +8,7 @@ class Register extends Handlers\Handler {
 	
 	private $filter = array(
 		'csrf'		=> \FILTER_SANITIZE_ENCODED,
-		'username'	=> \FILTER_SANITIZE_ENCODED,
+		'username'	=> \FILTER_SANITIZE_FULL_SPECIAL_CHARS,
 		'password'	=> \FILTER_UNSAFE_RAW,
 		'email'		=> \FILTER_SANITIZE_EMAIL
 	);
@@ -26,5 +26,6 @@ class Register extends Handlers\Handler {
 	
 	public function register( Events\Event $event ) {
 		#TODO
+		$data = filter_input_array( \INPUT_POST, $this->filter );
 	}
 }
