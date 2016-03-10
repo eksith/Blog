@@ -20,7 +20,7 @@ $firewall->run();
 
 # Event dispatcher
 $sender		= new Blog\Events\Dispatcher(
-			$request, $crypto, $config
+			$request, $config, $crypto
 		);
 
 # Placeholder markers (doubles as variable names passed to routes)
