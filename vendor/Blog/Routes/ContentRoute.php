@@ -37,6 +37,10 @@ class ContentRoute extends Route {
 				$this->read( $this->sender );
 				break;
 				
+			case 'viewPosts':
+				$this->posts( $this->sender );
+				break;
+				
 			default:
 				$this->archive( $this->sender );
 		}
@@ -58,6 +62,14 @@ class ContentRoute extends Route {
 		
 		$this->add( new Views\Content\Read( $sender ) );
 		$this->add( new Views\Content\Front( $sender ) );
+	}
+	
+	private function posts( $sender ) {
+		$this->add( new Handlers\Content\Index( $sender ) );
+		$this->add( new Handlers\Menu( $sender ) );
+		
+		$this->add( new Views\Content\Index( $sender ) );
+		$this->add( new Views\Content\Manage( $sender ) );
 	}
 	
 	private function creating( $sender ) {
