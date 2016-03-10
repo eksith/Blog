@@ -5,8 +5,11 @@ use Blog\Views;
 
 class Login extends Views\View {
 	
-	public function loginView( Events\Event $event ) {
-		# TODO
-		echo 'login view';
+	public function loggingIn( Events\Event $event ) {
+		$vars	= array(
+			'login_csrf'	=> $event->get( 'login_csrf' )
+		);
+		
+		$event->set( 'login_form', $vars );
 	}
 }
