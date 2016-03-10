@@ -22,7 +22,12 @@ class Sensor {
 	/**
 	 * @var array Whitelist of acceptable methods
 	 */
-	private $methods 	= array( 'get', 'head', 'post' );
+	private $methods 	= array( 'get', 'head', 'post', 'put' );
+	
+	/**
+	 * @var string Request method
+	 */
+	private $method;
 	
 	/**
 	 * @var array Whitelist of acceptable ports
@@ -30,7 +35,7 @@ class Sensor {
 	private $ports		= array( 80, 443 );
 	
 	/**
-	 * @var ServerRequest 
+	 * @var object ServerRequest 
 	 */
 	private $request;
 	
@@ -45,12 +50,12 @@ class Sensor {
 	private $crypto;
 	
 	/**
-	 * @var BrowserProfile 
+	 * @var object BrowserProfile 
 	 */
 	private $browser;
 	
 	/**
-	 * @var IP class
+	 * @var object IP class
 	 */
 	private $ip;
 	
@@ -65,6 +70,8 @@ class Sensor {
 		
 		$this->ip	= new IP();
 		$this->browser	= $request->getBrowserProfile();
+		$this->method	= 
+			strtolower( $this->request->getMethod() );
 		
 		$this->sessionCheck();
 	}
@@ -73,17 +80,26 @@ class Sensor {
 	 * Run firewall
 	 */
 	public function run() {
+		$this->checkPort();
 		$this->accept( $this->methods );
 		$this->requestScan();
 		
+		$headers	= $this->request->getHeaders();
+		$hash		= $this->browser->headerHash();
+		
 		# Prevent redundant scans if it's the same user
-		if ( $this->expired( $this->request->getHeaders() ) ) {
+		if ( $this->expired( $hash ) ) {
 			$this->ipScan();
 			$this->checkHeaders();
 			$this->uaScan();
+			
+			$_SESSION[$hash]	= true;
 		}
 		
-		$this->bodyScan();
+		$search	= array( 'put', 'post' );
+		if ( in_array( $this->method, $search ) ) {
+			$this->bodyScan();
+		}
 	}
 	
 	/**
@@ -107,7 +123,7 @@ class Sensor {
 				continue;
 			}
 			
-			foreach( $pre as $k => $v ) {
+			foreach ( $pre as $k => $v ) {
 				if ( $this->isearch( $pre, $v ) ) {
 					$this->end( 'Global injection' );
 				}
@@ -118,40 +134,10 @@ class Sensor {
 	/**
 	 * Check if a scan is needed from the last time using headers
 	 */
-	private function expired( $headers ) {
-		$skip	= 
-		array(
-			'Accept-Datetime',
-			'Accept-Encoding',
-			'Content-Length',
-			'Cache-Control',
-			'Content-Type',
-			'Content-Md5',
-			'Referer',
-			'Cookie',
-			'Expect',
-			'Date',
-			'TE'
-		);
-		
-		$search	= array_intersect_key( 
-				array_keys( $headers ), 
-				array_reverse( $skip ) 
-			);
-		$match	= $this->ip->getIP();
-		
-		foreach ( $headers as $k => $v ) {
-			$match .= $v[0];
-		}
-		
-		$hash	= hash( 'tiger192,4', $match );
-		
+	private function expired( $hash ) {
 		if ( \session_status() === \PHP_SESSION_ACTIVE ) {
-			$org = isset( $_SESSION[$hash] ) ? 
-					true : false;
-			
-			$_SESSION[$hash] = true;
-			return $org;
+			return isset( $_SESSION[$hash] ) ? 
+					false : true;
 		}
 		
 		return true;
@@ -161,25 +147,29 @@ class Sensor {
 	 * Scan IP blocklist
 	 */
 	private function ipScan() {
-		$ip		= strtolower( $this->ip->getIP() );
+		$ip	= strtolower( $this->ip->getIP() );
 		
+		# Running locally? Skip IP check
 		if ( !$this->getSetting( 'firewall_local' ) ) {
 			if ( !$this->ip->validateIP( $ip ) ) {
 				$this->end( 'Invalid source' );
 			}
 		}
+		$host	= trim( strtolower( gethostbyaddr( $ip ) ) );
 		
-		$data		= 
-		\parse_ini_file( 
-			$this->getSetting( 'firewall_ip' )
-		);
-		
-		foreach ( $data['u'] as $u ) {
-			if ( 0 === strncmp( $ip, $u, strlen( $u ) ) ) {
-				# $this->end( 'Denied' );
-				$this->end();
+		$this->blacklist( 
+			'firewall_ip',
+			function( $u ) use ( $ip, $host ) {
+				$len	= mb_strlen( $u, '8bit' );
+				if ( 0 === strncmp( $ip, $u, $len ) ) {
+					$this->end( 'Denied IP' );
+				}
+				
+				if ( 0 === strncmp( $host, $u, $len ) ) {
+					$this->end( 'Denied host' );
+				}
 			}
-		}
+		);
 	}
 	
 	/**
@@ -189,18 +179,15 @@ class Sensor {
 		$uri		= $this->request
 					->getUri()
 					->getRawPath();
-		$data		= 
-		\parse_ini_file( 
-			$this->getSetting( 'firewall_uri' )
-		);
-		foreach ( $data['u'] as $u ) {
-			if ( false === stripos( $uri, $u ) ) {
-				continue;
-			} else {
-				# $this->end( 'Invalid URI' );
-				$this->end();
+		
+		$this->blacklist( 
+			'firewall_uri',
+			function( $u ) use ( $uri ) {
+				if ( false !== stripos( $uri, $u ) ) {
+					$this->end( 'Invalid URI' );
+				}
 			}
-		}
+		);
 	}
 	
 	/**
@@ -209,15 +196,14 @@ class Sensor {
 	private function uaScan() {
 		$ua		= $this->request
 					->getHeader( 'User-Agent' );
-		$headers 	= $this->request->getHeaders();
-		$data		= 
-		\parse_ini_file( 
-			$this->getSetting( 'firewall_ua' )
+		$this->blacklist( 
+			'firewall_ua',
+			function( $u ) use ( $ua ) {
+				if ( false !== stripos( $ua[0], $u ) ) {
+					$this->end( 'Invalid browser' );
+				}
+			}
 		);
-		
-		if ( $this->has( $headers, 'User-Agent', $data['u'] ) ) {
-			$this->end( 'Invalid browser' );
-		}
 	}
 	
 	/**
@@ -225,6 +211,52 @@ class Sensor {
 	 */
 	private function bodyScan() {
 		# TODO
+		# $body	= $this->request->getBody();
+		
+	}
+	
+	/**
+	 * Blacklist file loader and filter
+	 * 
+	 * @param string $file Name of configuration file
+	 * @param callable $map Optional filter function callback
+	 */
+	private function blacklist( $file, $map = null ) {
+		$data	= 
+		\file( 
+			$this->getSetting( $file ),
+			\FILE_SKIP_EMPTY_LINES 
+		);
+		
+		$filter	= array();
+		foreach ( $data as $u ) {
+			$u	= trim( $u );
+			if ( empty( $u ) ) {
+				continue;
+			}
+			if ( ';' == substr( $u, 0, 1 ) ) {
+				continue; # Skip comments
+			}
+			
+			$filter[] = $u;
+		}
+		
+		if ( is_callable( $map ) ) {
+			return array_map( $map, $filter );
+		}
+		return $filter;
+	}
+	
+	/**
+	 * Check request URI port
+	 */
+	private function checkPort(){
+		$port		= $this->request
+					->getUri()
+					->getPort();
+		if ( !in_array( $port, $this->ports ) ) {
+			$this->end( 'Invalid port' );
+		}
 	}
 	
 	# https://eksith.wordpress.com/2013/11/04/firewall-php/
@@ -267,7 +299,7 @@ class Sensor {
 	 * Kills the script on failure.
 	 */
 	private function accept( $methods ) {
-		$request = strtolower( $_SERVER['REQUEST_METHOD'] );
+		$request = $this->method;
 		if ( is_array( $methods ) ) { 
 			if ( in_array( $request, $methods ) ) {
 				return;
@@ -356,13 +388,11 @@ class Sensor {
 	 */
 	private function sessionCanary() {
 		$key	= $this->config->getSetting( 'visit_key' );
+		$time	= $this->config->getSetting( 'session_time' );
 		$bytes	= $this->crypto->bytes( $key );
 		
 		$_SESSION['canary'] = array(
-			'exp'	=> 
-			time() + 
-			$this->config->getSetting( 'session_time' ),
-			
+			'exp'	=> time() + $time,
 			'visit'	=> bin2hex( $bytes )
 		);
 	}
