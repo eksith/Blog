@@ -51,15 +51,6 @@ final class Config {
 				self::DECODE_DEPTH 
 			);
 			
-		} elseif (
-			defined( 'KEY_PART1' ) && 
-			defined( 'KEY_PART2' ) && 
-			defined( 'ENCRYPTED_CONFIG' )
-		) {
-			$key2	= ini_get( KEY_PART2 );
-			$data	= $this->crypto->decrypt( 
-					CONFIG, KEY_PART1 . $key2
-				);
 		} else {
 			die( 'Could not load application settings' );
 		}
