@@ -67,6 +67,17 @@ class Route {
 		$this->event->attach( $handler );
 	}
 	
+	public function redirect( Events\Dispatcher $sender, $url ) {
+		if ( !headers_sent() ) {
+			$host	= $sender->getRequest()
+					->getUri()
+					->getRoot();
+			
+			$url	= rtrim( $url, '/' );
+			header( 'Location: '. $host . '/' . $url );
+		}
+	}
+	
 	/**
 	 * Apply event variable map (comes route from path)
 	 */
