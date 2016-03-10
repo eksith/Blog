@@ -17,6 +17,13 @@ class UserRoute extends Route {
 				$this->login( $this->sender );
 				break;
 				
+			case 'logout':
+				$this->redirect( 
+					$this->sender, 
+					static::$login_route
+				);
+				break;
+				
 			case 'registering':
 				$this->registering( $this->sender );
 				break;
