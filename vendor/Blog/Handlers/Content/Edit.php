@@ -1,17 +1,17 @@
 <?php
 
 namespace Blog\Handlers\Content;
-use Blog\Handlers;
 use Blog\Events;
 use Blog\Models;
 
-class Edit extends Handlers\Handler {
+class Edit extends ContentHandler {
 	
 	private $filter = array(
-		'csrf'		=> \FILTER_SANITIZE_ENCODED,
+		'csrf'		=> \FILTER_SANITIZE_STRING,
 		'id'		=> \FILTER_VALIDATE_INT,
 		'title'		=> \FILTER_SANITIZE_FULL_SPECIAL_CHARS,
-		'publish'	=> \FILTER_SANITIZE_STRING,
+		'pubdate'	=> \FILTER_SANITIZE_STRING,
+		'slug'		=> \FILTER_SANITIZE_FULL_SPECIAL_CHARS,
 		'summary'	=> \FILTER_UNSAFE_RAW,
 		'body'		=> \FILTER_UNSAFE_RAW,
 		'status'	=> 
@@ -20,7 +20,7 @@ class Edit extends Handlers\Handler {
 				'flags'		=> \FILTER_REQUIRE_ARRAY,
 				'options'	=> 
 				array(
-					'default'	=> 0,
+					'default'	=> -1,
 					'min_range'	=> -1,
 					'max_range'	=> 99
 				)
@@ -85,17 +85,7 @@ class Edit extends Handlers\Handler {
 		}
 		
 		$post->id		= $data['id'];
-		$post->title		= empty( $data['title'] ) ?
-			'Untitled' : $data['title'];
-		
-		$post->raw		= empty( $data['body'] ) ? 
-			'' : $data['body'];
-		
-		$post->summary		= empty( $data['summary'] ) ? 
-			'' : $filter->clean( $data['summary'], false );
-		
-		$post->body		= $filter->clean( $post->raw );
-		$post->plain		= strip_tags( $post->body );
+		$this->basePost( $data, $post );
 		
 		$post->save();
 		$this->redirect( '/manage/edit/' . $post->id, 205 );
