@@ -23,6 +23,12 @@ class Event implements \SplSubject {
 		return $this->dispatcher->getRequest();
 	}
 	
+	public function getSetting( $setting ) {
+		return $this->dispatcher
+			->getConfig()
+			->getSetting( $setting );
+	}
+	
 	public function has( \SplObserver $handler ) {
 		return $this->handlers->contains( $handler );
 	}
