@@ -5,6 +5,7 @@ namespace Blog\Core\Security;
 class BrowserProfile {
 	
 	private $browser;
+	private $header_hash;
 	private $rawsig;
 	private $sig;
 	
@@ -273,12 +274,50 @@ class BrowserProfile {
 		return $this->m_fields;
 	}
 	
+	/**
+	 * Header signature excluding frequently changing headers
+	 */
+	public function headerHash() {
+		if ( isset( $this->header_hash ) ) {
+			return $this->header_hash;
+		}
+		
+		$headers	= $this->headers();
+		$skip		= 
+		array(
+			'Accept-Datetime',
+			'Accept-Encoding',
+			'Content-Length',
+			'Cache-Control',
+			'Content-Type',
+			'Content-Md5',
+			'Referer',
+			'Cookie',
+			'Expect',
+			'Date',
+			'TE'
+		);
+		
+		$search		= array_intersect_key( 
+					array_keys( $headers ), 
+					array_reverse( $skip ) 
+				);
+		$match		= $this->ip->getIP();
+		
+		foreach ( $headers as $k => $v ) {
+			$match .= $v[0];
+		}
+		
+		$this->header_hash = 
+			hash( self::SIGNATURE_HASH, $match );
+	}
+	
 	public function headers( $key = null ) {
 		if ( !isset( $this->sent_headers ) ) {
 			$this->sent_headers = $this->httpHeaders();
 		}
 		
-		if ( null == $key ) {
+		if ( empty( $key ) ) {
 			return $this->sent_headers;
 		}
 		
