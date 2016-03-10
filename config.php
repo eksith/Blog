@@ -50,7 +50,7 @@ define( 'CONFIG', <<<JSON
 	
 	"session_hash"		: "tiger160,4",
 	"sesssion_key"		: 12,
-	"session_time"		: 12000,
+	"session_time"		: 1200,
 	
 	"visit_key"		: 6,
 	
@@ -63,7 +63,7 @@ define( 'CONFIG', <<<JSON
 	"csrf_hash"		: "tiger128,3",
 	"csrf_size"		: 16,
 	"csrf_salt"		: 4,
-	"csrf_rounds"		: 1000,
+	"csrf_rounds"		: 100,
 	
 	"post_status_buried"	: -1,
 	"post_status_open"	: 0,
@@ -100,3 +100,12 @@ JSON
 \spl_autoload_register( function( $class ) {
 	\spl_autoload( str_replace( "\\", "/", $class ) );
 });
+
+
+/*
+$session = new BlogSession();
+\session_set_save_handler( $session, true );
+register_shutdown_function( 
+	'session_write_close' 
+);
+*/
