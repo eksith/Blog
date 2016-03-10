@@ -5,6 +5,36 @@ use Blog\Handlers;
 
 class ContentHandler extends Handlers\Handler {
 	
+	/**
+	 * Load base properties for both creating and editing a post
+	 */
+	protected function basePost( $data, &$post ) {
+		$post->title		= empty( $data['title'] ) ?
+			'Untitled' : $data['title'];
+		
+		$post->raw		= empty( $data['body'] ) ? 
+			'' : $data['body'];
+		
+		$post->summary		= empty( $data['summary'] ) ? 
+			'' : $filter->clean( $data['summary'], false );
+		
+		$post->body		= $filter->clean( $post->raw );
+		$post->plain		= strip_tags( $post->body );
+		
+		$pub			=  empty( $data['pubdate'] ) ?
+			time() : strtotime( $data['pubdate'] . ' UTC' );
+		
+		$post->published_at	= Models\Model::myTime( $pub );
+		
+		$post->slug		= empty( $data['slug'] ) ?
+			$this->slugify( $post->title ) :
+			$this->slugify( $data['slug'] );
+		
+	}
+	
+	/**
+	 * Convert a string into a page slug
+	 */
 	public static function slugify( $text ) {
 		$text = preg_replace( '~[^\\pL\d]+~u', ' ', $text );
 		$text = preg_replace( '/\s+/', '-', trim( $text ) );
