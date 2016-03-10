@@ -87,7 +87,13 @@ class Uri extends Immutable implements \Psr\Http\Message\UriInterface {
 	}
 	
 	public function getRoot() {
-		
+		$scheme = $this->getScheme();
+		if ( empty( $scheme ) ) {
+			$scheme = 'http';
+		}
+		return $this->uriToString(
+			$scheme,
+			$this->getAuthority() );
 	}
 	
 	public function getRawPath() {
@@ -181,14 +187,11 @@ class Uri extends Immutable implements \Psr\Http\Message\UriInterface {
 		$query		= null,
 		$fragment	= null
 	) {
-		$uri	= empty( $scheme ) ?	'' : $scheme . ':';
-		
-		$uri	.= 
-		empty( $authority ) ? 
-			( empty( $scheme ) ?	'' : '//' ) : 
-			( empty( $scheme ) ? 
-				$authority : $auhority . '//' );
-		
+		$uri	= 
+		empty( $authority ) ?
+			( empty( $scheme ) ? '' : $scheme . '://') : 
+			( empty( $scheme ) ? '' : $scheme . '://' . $authority );
+			
 		$uri	.= 
 		empty( $path ) ? '' : 
 			( ( substr( $path, 0, 1 ) === '/' ) ? 
@@ -228,7 +231,7 @@ class Uri extends Immutable implements \Psr\Http\Message\UriInterface {
 			$this->errors[] = 'Invalid port number';
 			return '';
 		}
-		return $val;
+		return ( int )$val;
 	}
 	
 	protected function filterScheme( $scheme ) {
