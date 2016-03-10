@@ -8,7 +8,7 @@ class Profile extends Handlers\Handler {
 	
 	private $filter = array(
 		'csrf'		=> \FILTER_SANITIZE_ENCODED,
-		'username'	=> \FILTER_SANITIZE_ENCODED,
+		'username'	=> \FILTER_SANITIZE_FULL_SPECIAL_CHARS,
 		'password'	=> \FILTER_UNSAFE_RAW,
 		'email'		=> \FILTER_VALIDATE_EMAIL,
 		'bio'		=> \FILTER_UNSAFE_RAW,
