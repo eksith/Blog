@@ -8,16 +8,19 @@ use Blog\Messaging;
 class Dispatcher {
 	
 	private static $queue;
-	private static $crypto;
+	private $crypto;
 	private $events		= array();
 	private $config;
 	private $request;
 	
 	public function __construct(
-		Messaging\ServerRequest $request
+		Messaging\ServerRequest $request,
+		Core\Config $config, 
+		Core\Crypto $crypto
 	) {
 		$this->request	= $request;
-		$this->config	= new Core\Config( $this->getCrypto() );
+		$this->config	= $config;
+		$this->crypto	= $crypto;
 		
 		Models\Model::setConfig( $this->config );
 		Models\Model::setCrypto( $this->getCrypto() );
@@ -29,6 +32,10 @@ class Dispatcher {
 	
 	public function getConfig() {
 		return $this->config;
+	}
+	
+	public function getCrypto() {
+		return $this->crypto;
 	}
 	
 	public function has( $name, Event $event ) {
@@ -92,20 +99,12 @@ class Dispatcher {
 		}
 	}
 	
-	public function getCrypto() {
-		if ( !isset( self::$crypto ) ) {
-			self::$crypto = new Core\Crypto();
-		}
-		
-		return self::$crypto;
-	}
-	
 	public function defer() {
-		if ( !isset( self::$queue ) ) {
-			self::$queue = new Queue();
+		if ( !isset( static::$queue ) ) {
+			static::$queue = new Queue();
 		}
 		
-		self::$queue->schedule( func_get_args() );
+		static::$queue->schedule( func_get_args() );
 	}
 }
 
