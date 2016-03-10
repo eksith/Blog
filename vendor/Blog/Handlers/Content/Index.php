@@ -13,4 +13,15 @@ class Index extends Handlers\Handler {
 	public function archive( Events\Event $event ) {
 		echo 'archive controller ';
 	}
+	
+	public function viewPosts( Events\Event $event ) {
+		$event->set(
+			'searchpost_csrf',
+			$this->getCsrf( 'searchpost', $event ) 
+		);
+	}
+	
+	public function searchPost( Events\Event $event ) {
+		
+	}
 }
