@@ -27,7 +27,7 @@ class ServerRequest extends Request
 		$this->signature();
 		
 		if ( empty( $body ) ) {
-			$body	= file_get_contents( 'php://stdin' );
+			$body		= $this->getInput();
 		}
 		if ( empty( $headers ) ) {
 			$headers	= $this->browser->headers();
@@ -115,9 +115,11 @@ class ServerRequest extends Request
 	}
 	
 	# https://secure.php.net/manual/en/wrappers.php.php
+	# https://www.w3.org/TR/html401/interact/forms.html#h-17.13.4
+	# https://secure.php.net/manual/en/wrappers.php
 	# Detect content type and parse as application/x-www-form-urlencoded or multipart/form-data
 	public function getBodyWithFilter( $filter ) {
-		# TODO
+		# TODO 
 	}
 	
 	public function getSignature( $raw = false ) {
@@ -132,8 +134,13 @@ class ServerRequest extends Request
 	}
 	
 	private function filesPut() {
-		$files = array();
+		$data	= $this->getBody();
 		
+		if ( empty( $data ) ) {
+			return array();
+		}
+		
+		parse_str( $data, $files );
 		return $files;
 	}
 	
@@ -170,6 +177,22 @@ class ServerRequest extends Request
 		
 		return $files;
 	}
+	
+	# https://php.net/manual/en/function.stream-copy-to-stream.php#98119
+	# https://secure.php.net/tempnam
+	# https://php.net/manual/en/features.file-upload.put-method.php#99863
+	private function getInput() {
+		# TODO Read from input as a stream when content length isn't specified
+		$body	= file_get_contents( 'php://stdin' );
+		if ( empty( $body ) ) {
+			if ( $this->hasHeader( 'content-length' ) ) {
+				$body	= file_get_contents( 'php://input' );
+			}
+		}
+		
+		return $body;
+	}
+	
 	
 	private function signature() {
 		if ( !isset( $this->browser ) ) {
