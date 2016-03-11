@@ -1,6 +1,7 @@
 <?php
 
 namespace Blog\Core\Security;
+use Blog\Models;
 use Blog\Core;
 use Blog\Messaging;
 
@@ -59,6 +60,11 @@ class Sensor {
 	 */
 	private $ip;
 	
+	const HOST_SIZE		= 255;
+	const HOST_CHUNKS	= 8;
+	const HOST_RX		= 
+	'~^([\w-]+://?|www[\.])?([^\-\s\,\;\:\+\/\\\?\^\`\=\&\%\"\'\*\#\<\>]*)\.[a-z]{2,9}$~i';
+	
 	public function __construct(
 		Messaging\ServerRequest $request,
 		Core\Config $config,
@@ -73,6 +79,10 @@ class Sensor {
 		$this->method	= 
 			strtolower( $this->request->getMethod() );
 		
+		# Prepare model for future scans
+		Models\Model::setConfig( $config );
+		Models\Model::setCrypto( $crypto );
+		
 		$this->sessionCheck();
 	}
 	
@@ -84,18 +94,21 @@ class Sensor {
 		$this->accept( $this->methods );
 		$this->requestScan();
 		
+		
+		$ip		= $this->ip->getIP();
 		$headers	= $this->request->getHeaders();
-		$hash		= $this->browser->headerHash();
+		$hash		= $this->browser->headerHash() . $ip;
 		
 		# Prevent redundant scans if it's the same user
 		if ( $this->expired( $hash ) ) {
-			$this->ipScan();
+			$this->ipScan( $ip );
 			$this->checkHeaders();
 			$this->uaScan();
 			
 			$_SESSION[$hash]	= true;
 		}
 		
+		# Put and Post require extra scrutiny
 		$search	= array( 'put', 'post' );
 		if ( in_array( $this->method, $search ) ) {
 			$this->bodyScan();
@@ -144,35 +157,6 @@ class Sensor {
 	}
 	
 	/**
-	 * Scan IP blocklist
-	 */
-	private function ipScan() {
-		$ip	= strtolower( $this->ip->getIP() );
-		
-		# Running locally? Skip IP check
-		if ( !$this->getSetting( 'firewall_local' ) ) {
-			if ( !$this->ip->validateIP( $ip ) ) {
-				$this->end( 'Invalid source' );
-			}
-		}
-		$host	= trim( strtolower( gethostbyaddr( $ip ) ) );
-		
-		$this->blacklist( 
-			'firewall_ip',
-			function( $u ) use ( $ip, $host ) {
-				$len	= mb_strlen( $u, '8bit' );
-				if ( 0 === strncmp( $ip, $u, $len ) ) {
-					$this->end( 'Denied IP' );
-				}
-				
-				if ( 0 === strncmp( $host, $u, $len ) ) {
-					$this->end( 'Denied host' );
-				}
-			}
-		);
-	}
-	
-	/**
 	 * Scan request path for anomalies
 	 */
 	private function requestScan() {
@@ -216,6 +200,159 @@ class Sensor {
 	}
 	
 	/**
+	 * Scan IP blocklist
+	 */
+	private function ipScan( $ip ) {
+		
+		# Running locally? Skip IP check
+		if ( $this->getSetting( 'firewall_local' ) ) {
+			$ip	= '127.0.0.1';
+		} else {
+			if ( !$this->ip->validateIP( $ip ) ) {
+				$this->end( 'Denied IP' );
+			}
+		}
+		
+		
+		if ( $this->getSetting( 'firewall_hosts' ) ) {
+			if ( $this->getSetting( 'firewall_local' ) ) {
+				$host	= 'localhost';
+			} else {
+				$host	= 
+				trim( strtolower( gethostbyaddr( $ip ) ) );
+				if ( !$this->validateHost( $host ) ) {
+					$this->end( 'Denied host' );
+				}
+			}
+		} else {
+			$host	= '';
+		}
+		
+		# TODO Move this into a database search due to the 
+		# 	potentially large number of blocks
+		$this->blacklist( 
+			'firewall_ip',
+			function( $u ) use ( $ip, $host ) {
+				$len	= mb_strlen( $u, '8bit' );
+				if ( 0 === strncmp( $ip, $u, $len ) ) {
+					$this->end( 'Denied IP' );
+				}
+				
+				if ( empty( $host ) ) {
+					return;
+				}
+				
+				if ( 0 === strncmp( $host, $u, $len ) ) {
+					$this->end( 'Denied host' );
+				}
+			}
+		);
+	}
+	
+	/**
+	 * Get combined IP and host ranges for database search
+	 */
+	private function getSearchRanges() {
+		$ip	= $this->ip->getIP();
+		$search	= $this->getIpRange( $ip );
+		
+		# Check host names if enabled
+		if ( $this->getSetting( 'firewall_hosts' ) ) {
+			$search =  array_merge( 
+					$search, 
+					$this->getHostRange( $ip )
+				);
+		}
+		
+		
+	}
+	
+	/**
+	 * Prepare IP for databases
+	 */
+	private function getIpRange( $ip ) {
+		# Running locally? Skip IP check
+		if ( $this->getSetting( 'firewall_local' ) ) {
+			$ip	= '127.0.0.1';
+		} else {
+			if ( !$this->ip->validateIP( $ip ) ) {
+				$this->end( 'Denied IP' );
+			}
+		}
+		$ish	= $this->hostSplit( $ip );	# IP chunks
+		
+		return $ish;
+	}
+	
+	/**
+	 * Prepare host for database search
+	 */
+	private function getHostRange( $ip ) {
+		if ( $this->getSetting( 'firewall_local' ) ) {
+			$host	= 'localhost';
+		} else {
+			$host	= 
+			trim( strtolower( gethostbyaddr( $ip ) ) );
+			
+			if ( !$this->validateHost( $host ) ) {
+				$this->end( 'Denied host' );
+			}
+		}
+		
+		$hsh	= $this->hostSplit( $host );	# Host chunks
+		if( false === $hsh ) {
+			$this->end( 'Denied host' );
+		}
+		
+		return $hsh;
+	}
+	
+	# https://stackoverflow.com/questions/14313849/how-to-validate-internationalized-domain-names
+	private function validateHost( $host ) {
+		if ( mb_strlen( $host, '8bit' ) > self::HOST_SIZE ) {
+			return false;
+		}
+		
+		if ( preg_match( self::HOST_RX, $host ) ) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Prepare host segments for searching by splitting into 
+	 * constituent parts
+	 * 
+	 * @example array( '127', '127.0', '127.0.0', '127.0.0.1' )
+	 * @return array
+	 */
+	private function hostSplit( $host ) {
+		$s	= '.';
+		if ( 0 === stripos( $host, '::' ) ) {
+			$s	= '::';
+			$c	= explode( '::', $host );
+		} else {
+			$c	= explode( '.', $host );
+		}
+		
+		if ( count( $c ) > self::HOST_CHUNKS ) {
+			return false;
+		}
+		
+		$l	= count( $c );
+		$map	= array();
+		$over	= array();
+		
+		for ( $i = 0; $i < $l; $i++ ) {
+			$over[]	= $c[$i];
+			$map[]	= implode( $s, $over );
+		}
+		
+		return $map;
+	}
+	
+	/**
 	 * Blacklist file loader and filter
 	 * 
 	 * @param string $file Name of configuration file
@@ -251,9 +388,7 @@ class Sensor {
 	 * Check request URI port
 	 */
 	private function checkPort(){
-		$port		= $this->request
-					->getUri()
-					->getPort();
+		$port		= $_SERVER['SERVER_PORT'];
 		if ( !in_array( $port, $this->ports ) ) {
 			$this->end( 'Invalid port' );
 		}
