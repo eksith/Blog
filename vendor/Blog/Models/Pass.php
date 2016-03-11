@@ -72,7 +72,7 @@ class Pass extends Model {
 			':lookup'	=> $lookup 
 			':exp'		=> 
 				time() - 
-				$this->getSetting( 'cookie_time' )
+				parent::getSetting( 'cookie_time' )
 		);
 		
 		return parent::query( $sql, $params, 'class' );
@@ -80,7 +80,7 @@ class Pass extends Model {
 	
 	public function authenticate() {
 		return 
-		$this->getCrypto()->verifyPbk(
+		parent::getCrypto()->verifyPbk(
 			$this->token . $this->hash, $this->auth
 		);
 	}
@@ -88,22 +88,22 @@ class Pass extends Model {
 	public function save() {
 		if ( !isset( $this->expires_at ) ) {
 			$this->expires_at	= 
-			time() + $this->getSetting( 'cookie_time' );
+			time() + parent::getSetting( 'cookie_time' );
 		}
 		if ( !isset( $this->token ) ) {
 			$this->token		= 
-			bin2hex( $this->getCrypto()->bytes(12) );
+			bin2hex( parent::getCrypto()->bytes(12) );
 		}
 		if ( !isset( $this->hash ) {
 			$this->lookup		= 
-			bin2hex( $this->getCrypto()->bytes(
-				$this->getSetting( 'user_hash_size' )
+			bin2hex( parent::getCrypto()->bytes(
+				parent::getSetting( 'user_hash_size' )
 			) );
 		}
 		
 		$this->auth = 
-		$this->getCrypto()->genPbk(
-			$this->getSetting( 'user_hash' ),
+		parent::getCrypto()->genPbk(
+			parent::getSetting( 'user_hash' ),
 			$this->token . $this->hash
 		);
 		
