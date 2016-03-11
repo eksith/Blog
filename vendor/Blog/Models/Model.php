@@ -101,7 +101,7 @@ class Model {
 		static::$crypto = $crypto;
 	}
 	
-	protected function getCrypto() {
+	protected static function getCrypto() {
 		if ( !isset( static::$crypto ) ) {
 			static::$rypto = new \Blog\Core\Crypto();
 		}
@@ -109,7 +109,7 @@ class Model {
 		return static::$crypto;
 	}
 	
-	protected function getSetting( $setting ) {
+	protected static function getSetting( $setting ) {
 		if ( !isset( static::$config ) ) {
 			static::$config = new \Blog\Core\Config();
 		}
