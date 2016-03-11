@@ -302,7 +302,7 @@ class BrowserProfile {
 					array_keys( $headers ), 
 					array_reverse( $skip ) 
 				);
-		$match		= $this->ip->getIP();
+		$match		= '';
 		
 		foreach ( $headers as $k => $v ) {
 			$match .= $v[0];
