@@ -68,9 +68,9 @@ class Session extends Model {
 	
 	public function save() {
 		$this->skey	= 
-		$this->getCrypto()->bytes( 
-				$this->getSetting( 'session_key' )
-			);
+		parent::getCrypto()->bytes( 
+			parent::getSetting( 'session_key' )
+		);
 		
 		$params = array(
 			'skey'		=> $this->skey, 
@@ -99,7 +99,7 @@ class Session extends Model {
 	
 	private function encrypted() {
 		return 
-		$this->getCrypto()->encrypt(
+		parent::getCrypto()->encrypt(
 			$this->data, $this->getStoreKey()
 		);
 	}
@@ -114,7 +114,7 @@ class Session extends Model {
 		}
 		
 		$this->decrypted = 
-		$this->getCrypto()-decrypt(
+		parent::getCrypto()-decrypt(
 			$this->data, $this->getStoreKey()
 		);
 		
@@ -123,7 +123,7 @@ class Session extends Model {
 	
 	private function getStoreKey() {
 		return hash( 
-			$this->getSetting( 'session_hash' ), 
+			parent::getSetting( 'session_hash' ), 
 			$this->key . $this->skey
 		);
 	}
