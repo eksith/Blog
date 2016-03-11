@@ -86,7 +86,7 @@ class HtmlFilter {
 		$html		=  $this->tidyup( $html );
 		
 		$old		= new \DOMDocument();
-		$old->loadXML( $html );
+			$old->loadXML( $html );
 		
 		
 		$oldBody	= 
