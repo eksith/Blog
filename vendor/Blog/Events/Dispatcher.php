@@ -1,7 +1,6 @@
 <?php
 
 namespace Blog\Events;
-use Blog\Models;
 use Blog\Core;
 use Blog\Messaging;
 
@@ -21,9 +20,6 @@ class Dispatcher {
 		$this->request	= $request;
 		$this->config	= $config;
 		$this->crypto	= $crypto;
-		
-		Models\Model::setConfig( $this->config );
-		Models\Model::setCrypto( $this->getCrypto() );
 	}
 	
 	public function getRequest() {
