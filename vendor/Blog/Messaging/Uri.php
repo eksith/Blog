@@ -11,7 +11,7 @@ class Uri extends Immutable implements \Psr\Http\Message\UriInterface {
 	);
 	
 	
-	const RX_URL	= '~^(http|ftp)(s)?\:\/\/((([a-z|0-9|\-]{1,25})(\.)?){2,7})($|/.*$){4,255}$~i';
+	const RX_URL	= '~^(http|ftp)(s)?\:\/\/((([a-z|0-9|\-]{1,25})(\.)?){2,9})($|/.*$){4,255}$~i';
 	
 	// Had some problems with this one
 	const RX_XSS1	= '/((java)?script|eval|document)/ism';
@@ -19,6 +19,8 @@ class Uri extends Immutable implements \Psr\Http\Message\UriInterface {
 	const RX_XSS2	= '/(<(s(?:cript|tyle)).*?)/ism';
 	const RX_XSS3	= '/(document\.|window\.|eval\(|\(\))/ism';
 	const RX_XSS4	= '/(\\~\/|\.\.|\\\\|\-\-)/sm';
+	
+	const RX_QUERY	= '/(?:[^a-zA-Z0-9_\-\.~!\$&\'\(\)\*\+,;= :@\/%]+|%(?![A-Fa-f0-9]{2}))/';
 	
 	protected $port		= '';
 	protected $query	= '';
@@ -33,11 +35,10 @@ class Uri extends Immutable implements \Psr\Http\Message\UriInterface {
 	
 	public function __construct( $uri = '' ) {
 		if ( empty( $uri ) ) {
-			$uri = self::fullUri();
+			$uri = static::fullUri();
 		}
-		
 		$this->raw_uri	= $uri;
-		$uri		= self::cleanUrl( $uri );
+		$uri		= static::cleanUrl( $uri );
 		$parts		= parse_url( $uri );
 		
 		if ( false === $parts ) {
@@ -204,10 +205,8 @@ class Uri extends Immutable implements \Psr\Http\Message\UriInterface {
 	}
 	
 	protected function filterQuery( $part ) {
-		$rx = 
-		'/(?:[^a-zA-Z0-9_\-\.~!\$&\'\(\)\*\+,;= :@\/%]+|%(?![A-Fa-f0-9]{2}))/';
 		return preg_replace_callback( 
-			$rx,
+			self::RX_QUERY,
 			function( array $match ) {
 				return rawurlencode( $match[0] );
 			},
@@ -304,36 +303,16 @@ class Uri extends Immutable implements \Psr\Http\Message\UriInterface {
 	 * @link https://stackoverflow.com/questions/6768793/get-the-full-url-in-php/8891890#8891890
 	 */
 	public static function fullUri( $usefw = false ) {
-		$ssl		= 
-		( !empty( $_SERVER['HTTPS'] ) && 
-			$_SERVER['HTTPS'] == 'on' );
+		$ssl		= static::currentIsSecure();
 		$sp		= 
 		strtolower( $_SERVER['SERVER_PROTOCOL'] );
 		
 		$protocol	= substr( $sp, 0, strpos( $sp, '/' ) ) . 
 					( ( $ssl ) ? 's' : '' );
-					
-		$port		= $_SERVER['SERVER_PORT'];
-		$port		= 
-		( ( ! $ssl && $port == '80' ) || 
-			( $ssl && $port == '443' ) ) ? '' : ':'. $port;
 		
-		$user		= isset( $_SERVER['PHP_AUTH_USER'] ) ? 
-					$_SERVER['PHP_AUTH_USER'] : '';
-		
-		$user		= 
-		( !empty( $user ) && isset( $_SERVER['PHP_AUTH_PW'] ) ) ? 
-				$user . $_SERVER['PHP_AUTH_PW'] . 
-				'@' : '';
-				
-		$host		= 
-		( $usefw && isset( $_SERVER['HTTP_X_FORWARDED_HOST'] ) ) ? 
-			$_SERVER['HTTP_X_FORWARDED_HOST'] : 
-			( isset( $_SERVER['HTTP_HOST'] ) ? 
-				$_SERVER['HTTP_HOST'] : null );
-		
-		$host		= !empty( $host ) ? $host : 
-					$_SERVER['SERVER_NAME'] . $port;
+		$port		= static::currentPort();
+		$user		= static::currentUser();
+		$host		= static::currentHost( $port, $usefw );
 		
 		return $protocol . '://' . $user . $host . 
 			$_SERVER['REQUEST_URI'];
@@ -367,5 +346,57 @@ class Uri extends Immutable implements \Psr\Http\Message\UriInterface {
 			return $txt;
 		}
 		return '';
+	}
+	
+	public static function currentHost( $port, $usefw ) {
+		$host = 
+		( $usefw && isset( $_SERVER['HTTP_X_FORWARDED_HOST'] ) ) ? 
+			$_SERVER['HTTP_X_FORWARDED_HOST'] : 
+				( isset( $_SERVER['HTTP_HOST'] ) ? 
+					$_SERVER['HTTP_HOST'] : null );
+		
+		return empty( $host ) ? 
+				$_SERVER['SERVER_NAME'] . $port : 
+				$host . $port;
+	}
+	
+	public static function currentIsSecure() {
+		$secure = false;
+		if ( isset( $_SERVER['HTTPS'] ) && $_SEVER['HTTPS'] == 'on' ) {
+			$secure = true;
+		
+		} elseif (
+			!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])	&& 
+				$_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'	|| 
+			!empty($_SERVER['HTTP_X_FORWARDED_SSL'])	&& 
+				$_SERVER['HTTP_X_FORWARDED_SSL'] == 'on'
+		) {
+			$secure = true;
+		}
+			
+		return $secure;
+	}
+	
+	public static function currentPort( $skip_eighty = true ) {
+		$port		= $_SERVER['SERVER_PORT'];
+		$ssl		= static::currentIsSecure();
+		$port		= 
+		( ( ! $ssl && $port == '80' ) || 
+			( $ssl && $port == '443' ) ) ? 
+				( $skip_eighty ? '' : ':80' ) : 
+				':'. $port;
+		
+		return $port;
+	}
+	
+	public static function currentUser() {
+		$user		= isset( $_SERVER['PHP_AUTH_USER'] ) ? 
+					$_SERVER['PHP_AUTH_USER'] : '';
+		
+		$user		= 
+		( !empty( $user ) && isset( $_SERVER['PHP_AUTH_PW'] ) ) ? 
+				$user . $_SERVER['PHP_AUTH_PW'] . 
+				'@' : '';
+		return $user;
 	}
 }
