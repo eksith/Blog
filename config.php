@@ -12,6 +12,7 @@ define( 'CONFIG', <<<JSON
 	"content_store"		: "sqlite:data\/content.sqlite",
 	"session_store"		: "sqlite:data\/sessions.sqlite",
 	"cache_store"		: "sqlite:data\/cache.sqlite",
+	"firewall_store"	: "sqlite:data\/firewall.sqlite",
 	
 	"theme_path"		: "|PATH|themes\/",
 	"theme_display"		: "\/themes\/",
@@ -25,6 +26,7 @@ define( 'CONFIG', <<<JSON
 	"firewall_uri"		: "|PATH|data\/uri.ini",
 	"firewall_ip"		: "|PATH|data\/ip.ini",
 	"firewall_bots"		: "|PATH|data\/bots.ini",
+	"firewall_hosts"	: true,
 	"firewall_local"	: true,
 	
 	"list_per_page"		: 20,
