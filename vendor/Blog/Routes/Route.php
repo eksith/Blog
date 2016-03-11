@@ -21,10 +21,10 @@ class Route {
 	 */
 	protected $event;
 	
-	private static $secure_routes	= array();
-	private static $register_route;
-	private static $login_route;
-	private static $logout_route;
+	protected static $secure_routes	= array();
+	protected static $register_route;
+	protected static $login_route;
+	protected static $logout_route;
 	
 	/**
 	 * Create a new route with a given request
@@ -38,7 +38,6 @@ class Route {
 		$this->sender	= $sender;
 		$this->event	= 
 			new Events\Event( $name, $this->sender );
-		
 		$this->sender->attach( 'route', $this->event );
 	}
 	
