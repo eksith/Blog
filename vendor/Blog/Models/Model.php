@@ -193,7 +193,7 @@ class Model {
 		$c = count( $data );
 		for ( $i = 0; $i < $c; $i++ ) {
 			$a	= ':' . $f . '_' . $i;
-			$p[$a]	= $ids[$i];
+			$p[$a]	= $data[$i];
 			$s	.= $a . ',';
 		}
 		
