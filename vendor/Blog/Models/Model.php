@@ -116,7 +116,7 @@ class Model {
 		return static::$config->getSetting( $setting );
 	}
 	
-	protected function parseParams( $params ) {
+	protected static function parseParams( $params ) {
 		$k = array_keys( $params );
 		$v = ':' . implode( ',:', $k );
 		
@@ -126,7 +126,7 @@ class Model {
 		);
 	}
 	
-	protected function replaceSql( $table, $params ) {
+	protected static function replaceSql( $table, $params ) {
 		$k = array_keys( $params );
 		$f = implode( ',', $k );
 		$v = ':' . implode( ',:', $k );
@@ -134,7 +134,7 @@ class Model {
 		return "REPLACE INTO $table ( $f ) VALUES ( $v );";
 	}
 	
-	protected function insertSql( $table, $params ) {
+	protected static function insertSql( $table, $params ) {
 		$k = array_keys( $params );
 		$f = implode( ',', $k );
 		$v = ':' . implode( ',:', $k );
@@ -142,7 +142,7 @@ class Model {
 		return "INSERT INTO $table ( $f ) VALUES ( $v );";
 	}
 	
-	protected function deleteSql( $table, $params ) {
+	protected static function deleteSql( $table, $params ) {
 		$k = array_keys( $params );
 		$v = array_map( function( $f ) {
 			return "$f = :$f";
@@ -152,7 +152,7 @@ class Model {
 		return "DELETE FROM $table WHERE $p;";
 	}
 	
-	protected function updateSql( $table, $params, $cond ) {
+	protected static function updateSql( $table, $params, $cond ) {
 		$k = array_keys( $params );
 		$v = array_map( function( $f ) {
 			return "$f = :$f";
@@ -184,7 +184,7 @@ class Model {
 				$filter['sort'] : null;
 	}
 	
-	protected function inParam(
+	protected static function inParam(
 		&$s	= '',
 		&$p	= array(), 
 		$data	= array(), 
@@ -239,8 +239,8 @@ class Model {
 		$params = array(), 
 		$db	= '' 
 	) {
-		$sql	= $this->replaceSql( $table, $params );
-		$params = $this->parseParams( $params );
+		$sql	= static::replaceSql( $table, $params );
+		$params = static::parseParams( $params );
 		
 		return $this->run( $sql, $params, $db );
 	}
@@ -257,10 +257,10 @@ class Model {
 	) {
 		$stm	= 
 		self::getDb( $db )->prepare(
-			$this->insertSql( $table, $params )
+			static::insertSql( $table, $params )
 		);
 		
-		$stm->execute( $this->parseParams( $params ) );
+		$stm->execute( static::parseParams( $params ) );
 		
 		return $db->lastInsertId(); 
 	}
@@ -273,10 +273,10 @@ class Model {
 	) {
 		$stm	= 
 		self::getDb( $db )->prepare(
-			$this->updateSql( $table, $params, 'id = :id' )
+			static::updateSql( $table, $params, 'id = :id' )
 		);
 		
-		return $stm->execute( $this->parseParams( $params ) );
+		return $stm->execute( static::parseParams( $params ) );
 	}
 	
 	protected function setIf( &$object, $params = array() ) {
