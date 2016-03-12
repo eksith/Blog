@@ -4,14 +4,14 @@ namespace Blog\Handlers\Content;
 use Blog\Handlers;
 use Blog\Events;
 
-class Index extends Handlers\Handler {
+class Index extends ContentHandler {
 	
 	public function index( Events\Event $event ) {
-		echo 'home controller ';
+		# echo 'home controller ';
 	}
 	
 	public function archive( Events\Event $event ) {
-		echo 'archive controller ';
+		# echo 'archive controller ';
 	}
 	
 	public function viewPosts( Events\Event $event ) {
