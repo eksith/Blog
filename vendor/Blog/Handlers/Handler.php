@@ -166,7 +166,28 @@ class Handler extends Events\Listener {
 		);
 	}
 	
+	/**
+	 * Safely redirect to another URL in the same domain with 
+	 * optional status code
+	 * 
+	 * @param string $url URL without 'http://' etc...
+	 * @param int $code Redirect code
+	 */
 	protected function redirect( $url, $code = 200 ) {
-		# TODO safely redirect 
+		if ( headers_sent() ) {
+			die();
+		}
+		$base	= $this->getRequest()->getUri->getRoot();
+		$path	= ltrim( $url, '/\\' );
+		
+		$status	= array( 200, 201, 202, 203, 204, 205, 300, 301, 
+			302, 303, 304, 401, 403, 404 );
+		
+		if ( !in_array( $code, $status ) ) {
+			$code = 302;
+		}
+		
+		header( "Location: $base/$path", true, $code );
+		die();
 	}
 }
