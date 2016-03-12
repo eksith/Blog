@@ -75,12 +75,45 @@ class Post extends Model {
 	public $parent_id	= 0;
 	
 	/**
-	
 	 * Published date (empty if unpublished)
 	 * 
 	 * @var string
 	 */
 	public $published_at;
+	
+	/**
+	 * Categorization and grouping taxonomy
+	 * 
+	 * @var array
+	 */
+	public $taxonomy;
+	
+	/**
+	 * Metadata and associated optional fields
+	 * 
+	 * @var array
+	 */
+	public $meta;
+	
+	public function __get( $name ) {
+		switch( $name ) {
+			case 'tags':
+			case 'categories':
+				return 
+				isset( $taxonomy[$name] ) ?
+					$taxonomy[$name] : array();
+				
+			case 'date_u':
+				return
+				isset( $this->published_at ) ? 
+					$this->myTime( strtotime(
+						$this->published_at
+					) ) : 
+					$this->myTime( \PHP_INT_MAX );
+		}
+		
+		return null;
+	}
 	
 	public function __construct( $data = array() ) {
 		parent::ifIsset( $this, $data );
@@ -91,8 +124,7 @@ class Post extends Model {
 			$this, 
 			array( 
 				'title', 'summary', 'raw', 'plain', 
-				'body', 'published_at', 
-				'status' 
+				'body', 'published_at', 'status' 
 			) 
 		);
 		
