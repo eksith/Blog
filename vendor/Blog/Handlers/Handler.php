@@ -177,7 +177,10 @@ class Handler extends Events\Listener {
 		if ( headers_sent() ) {
 			die();
 		}
-		$base	= $this->getRequest()->getUri->getRoot();
+		$base	= $this->getRequest()
+				->getUri()
+				->getRoot();
+			
 		$path	= ltrim( $url, '/\\' );
 		
 		$status	= array( 200, 201, 202, 203, 204, 205, 300, 301, 
