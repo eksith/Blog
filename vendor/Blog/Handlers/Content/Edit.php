@@ -44,7 +44,7 @@ class Edit extends ContentHandler {
 			'id,title,published_at,user_id,raw'
 		);
 		
-		if ( $this->editorStatus( $post->user_id, ) ) {
+		if ( $this->editorStatus( $post->user_id, $uid, $event ) ) {
 			$this->redirect( '/', 403 );
 		}
 		
