@@ -40,8 +40,7 @@ class Edit extends ContentHandler {
 		Models\Post::find(
 			'search'	=> 'id',
 			'value'		=> $event->get( 'post_id' );
-			'fields'	=> 
-			'id,title,published_at,user_id,raw'
+			'fields'	=> 'raw,summary'
 		);
 		
 		if ( $this->editorStatus( $post->user_id, $uid, $event ) ) {
