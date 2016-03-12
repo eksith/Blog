@@ -28,11 +28,11 @@ class Edit extends ContentHandler {
 	);
 	
 	public function editingPost( Events\Event $event ) {
-		if ( empty( $uid = $this->get( 'user_id' ) ) ) {
+		if ( empty( $uid = $event->get( 'user_id' ) ) ) {
 			$this->redirect( '/', 403 );
 		}
 		
-		if ( empty( $status = $this->get( 'user_status' ) ) ) {
+		if ( empty( $event->get( 'user_status' ) ) ) {
 			$this->redirect( '/', 403 );
 		}
 		
