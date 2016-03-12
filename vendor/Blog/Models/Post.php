@@ -119,6 +119,54 @@ class Post extends Model {
 		parent::ifIsset( $this, $data );
 	}
 	
+	public static function find( array $filter ) {
+		if ( 
+			!isset( $filter['search'] ) || 
+			!isset( $filter['value'] ) 
+		) {
+			return null;
+		}
+		
+		parent::baseFilter( $filter, $id, $limit, $page, $sort );
+		
+		if ( isset( $filter['fields'] ) ) {
+			$fields	= parent::filterFields( $filter['fields'] );
+		} else {
+			$fields = 'body,summary';
+		}
+		
+		$params	= array();
+		$sql	= 
+		"SELECT posts.id AS id, posts.title AS title, 
+		posts.root_id AS root_id, posts.parent_id AS parent_id, 
+		posts.status AS status, posts.created_at AS created_at, 
+		posts.updated_at AS updated_at,	
+		posts.reply_count AS reply_count, 
+		posts.reply_at AS reply_at, posts.user_id AS user_id, 
+		COALESCE( u.display, u.username, 'Anonymous' ) AS author,
+		u.username AS username, $fields 
+		
+		FROM posts INNER JOIN posts AS p ON posts.parent_id = p.id
+		LEFT JOIN users AS u ON posts.user_id = u.id";
+		
+		if ( $id > 0 ) {
+			$sql .= 'WHERE posts.parent_id = :id ';
+			$params[':id'] = $id;
+		} else {
+			$sql .= 'WHERE posts.parent_id = posts.id ';
+		}
+		
+		$params[':limit']	= $limit;
+		$params[':offset']	= ( $page - 1 ) * $limit;
+		$sql			.= 
+		' LIMIT :limit OFFSET :offset;';
+		
+		if ( $id > 0 ) {
+			return parent::query( $sql, $params, 'class' );
+		}
+		return parent::query( $sql, $params, new Post() );
+	}
+	
 	public function save() {
 		$params	= parent::ifIsset( 
 			$this, 
