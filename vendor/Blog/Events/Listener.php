@@ -25,7 +25,8 @@ class Listener implements \SplObserver {
 	}
 	
 	protected function getConfig() {
-		return $this->dispatcher->getConfig();
+		return $this->dispatcher
+				->getConfig();
 	}
 	
 	protected function getSetting( $setting ) {
@@ -49,7 +50,12 @@ class Listener implements \SplObserver {
 		
 		if ( method_exists( $this, $name ) ) {
 			$this->{$name}( $event );
-		} elseif( method_exists( $this, 'handleEvent' ) ) {
+		}
+		
+		/**
+		 * Universal event handler no matter what took place
+		 */
+		if ( method_exists( $this, 'handleEvent' ) ) {
 			$this->handleEvent( $event );
 		}
 	}
