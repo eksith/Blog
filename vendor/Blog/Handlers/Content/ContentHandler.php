@@ -5,6 +5,18 @@ use Blog\Handlers;
 
 class ContentHandler extends Handlers\Handler {
 	
+	protected function editorStatus( $user_id, $post_user, $event ) {
+		
+		if ( $post_user == $user_id ) {
+			return true;
+		}
+		$admin	= $this->getSetting( 'user_status_admin' );
+		$mod	= $this->getSetting( 'user_status_mod' );
+		$status	= $event->get( 'user_status' );
+		
+		return ( $status !==  $admin || $status !== $mod );
+	}
+	
 	/**
 	 * Load base properties for both creating and editing a post
 	 */
