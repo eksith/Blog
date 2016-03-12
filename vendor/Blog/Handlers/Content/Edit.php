@@ -28,14 +28,25 @@ class Edit extends ContentHandler {
 	);
 	
 	public function editingPost( Events\Event $event ) {
-		# TODO
-		$post			= new Models\Post();
-		$post->id		= 32;
-		$post->title		= 'This is a test title';
-		$post->raw		= 
-			'Some HTML in <strong>here</strong>';
-		$post->summary		= 'A short description';
-		$post->published_at	= Models\Model::myTime( time() );
+		if ( empty( $uid = $this->get( 'user_id' ) ) ) {
+			$this->redirect( '/', 403 );
+		}
+		
+		if ( empty( $status = $this->get( 'user_status' ) ) ) {
+			$this->redirect( '/', 403 );
+		}
+		
+		$post			= 
+		Models\Post::find(
+			'search'	=> 'id',
+			'value'		=> $event->get( 'post_id' );
+			'fields'	=> 
+			'id,title,published_at,user_id,raw'
+		);
+		
+		if ( $this->editorStatus( $post->user_id, ) ) {
+			$this->redirect( '/', 403 );
+		}
 		
 		$event->set( 'post', $post );
 		$event->set(
