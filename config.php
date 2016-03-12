@@ -9,11 +9,20 @@ define( 'CONFIG', <<<JSON
 {
 	"version"		: "0.01",
 	
+	"blog_name"		: "Blog",
+	"blog_tagline"		: "This is my blog. There are many like it, but this one is mine",
+	
 	"content_store"		: "sqlite:data\/content.sqlite",
 	"session_store"		: "sqlite:data\/sessions.sqlite",
 	"cache_store"		: "sqlite:data\/cache.sqlite",
 	"firewall_store"	: "sqlite:data\/firewall.sqlite",
 	
+	"media_path"		: "|PATH|data\/media\/",
+	"archive_path"		: "|PATH|data\/archive\/",
+	"compiled_tpl_path"	: "|PATH|data\/templates\/",
+	
+	"theme_default"		: "default",
+	"theme_admin"		: "admin",
 	"theme_path"		: "|PATH|themes\/",
 	"theme_display"		: "\/themes\/",
 	"theme_include_limit"	: 40,
@@ -21,6 +30,7 @@ define( 'CONFIG', <<<JSON
 	
 	"enable_register"	: true,
 	"enable_login"		: true,
+	"show_fullbody"		: true,
 	
 	"firewall_ua"		: "|PATH|data\/ua.ini",
 	"firewall_uri"		: "|PATH|data\/uri.ini",
@@ -32,10 +42,6 @@ define( 'CONFIG', <<<JSON
 	"list_per_page"		: 20,
 	"posts_per_page"	: 15,
 	"data_timeout"		: 10,
-	
-	"media_path"		: "|PATH|data\/media\/",
-	"archive_path"		: "|PATH|data\/archive\/",
-	"compiled_tpl_path"	: "|PATH|data\/templates\/",
 	
 	"date_format"		: "M, d h:i",
 	
