@@ -162,6 +162,19 @@ class Model {
 		return "UPDATE $table SET $p WHERE $cond;";
 	}
 	
+	protected static function filterFields( $fields ) {
+		$f = explode( $fields );
+		$f = array_map( 
+			function( $v ){
+				return 
+				preg_replace(
+					'/[^a-zA-Z0-9_]/', '', $v 
+				);
+			}, $f );
+		
+		return implode( ',' $f );
+	}
+	
 	protected static function baseFilter( 
 		$filter, 
 		&$id, 
