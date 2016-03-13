@@ -3,6 +3,7 @@
 namespace Blog\Handlers\User;
 use Blog\Handlers;
 use Blog\Events;
+use Blog\Models;
 
 class Register extends Handlers\Handler {
 	
@@ -25,7 +26,34 @@ class Register extends Handlers\Handler {
 	}
 	
 	public function register( Events\Event $event ) {
-		#TODO
 		$data = filter_input_array( \INPUT_POST, $this->filter );
+		$csrf = $this->verifyCsrf( 
+				$data['csrf'], 'register', $event 
+			);
+		if ( $csrf ) {
+			$this->save( $data );
+		} else {
+			$this->redirect( '/', 401 );
+		}
+	}
+	
+	private function findUser( $usernma, $email ) {
+		return 
+		Models\User::find( 
+			array( 
+				'search'	=> 'user or email', 
+				'values'	=> array( $username, $email )
+			) 
+		);
+	}
+	
+	private function save( $data ) 
+		$post			= 
+		$this->findUser( $data['username'], $data['email'] );
+		
+		if ( !empty( $post ) ) {
+			$this->redirect( '/', 401 );
+		}
+		
 	}
 }
