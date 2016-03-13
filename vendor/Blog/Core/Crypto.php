@@ -11,7 +11,7 @@ final class Crypto {
 	const RANDOM_TRIES	= 128;
 	const MERGE_HASH	= 'sha256';
 	const OSSL_IV_SIZE	= 'aes-256-cbc';
-	const PBK_DELIMETER	= '$';		// Don't use a comma
+	const PBK_DELIMETER	= '$';		# Don't use a comma
 	const PBK_REGEX		= '/[^a-f0-9\$]+$/i';
 	const PBK_MAX		= 255;
 	
@@ -53,7 +53,7 @@ final class Crypto {
 			return base64_encode( $iv . $cipher );
 		}
 		
-		return false;
+		die( 'Encryption not supported on this platform' );
 	}
 	
 	public function decrypt( $message, $key ) {
@@ -81,17 +81,18 @@ final class Crypto {
 		} elseif ( function_exists( 'mcrypt_decrypt' ) ) {
 			
 			$this->mcryptIVCipher( $message, $iv, $cipher );
-			$message= \mcrypt_decrypt( 
-					\MCRYPT_RIJNDAEL_128, 
-					$key, $cipher, 
-					'ctr', 
-					$iv 
-				);
+			$message = 
+			\mcrypt_decrypt( 
+				\MCRYPT_RIJNDAEL_128, 
+				$key, $cipher, 
+				'ctr', 
+				$iv 
+			);
 			
 			return $this->pkcsUnpad( $message );
 		}
 		
-		return false;
+		die( 'Encryption not supported on this platform' );
 	}
 	
 	private function osslIV() {
@@ -114,6 +115,7 @@ final class Crypto {
 		if ( $ivs === false || $ivs <= 0 ) {
 			die( 'OpenSSL IV length error' );
 		}
+		
 		$iv	= 
 		mb_substr( $message, 0, $ivs, '8bit' );
 		$cipher	= 
@@ -204,7 +206,8 @@ final class Crypto {
 		if ( function_exists( 'hash_equals' ) ) {
 			return \hash_equals( $str1, $str2 );
 		}
-		return substr_count( $str1 ^ $str2, "\0") * 2 === strlen( $str1 . $str2 );
+		return 
+		substr_count( $str1 ^ $str2, "\0" ) * 2 === strlen( $str1 . $str2 );
 	}
 	
 	public function genPbk(
@@ -264,35 +267,35 @@ final class Crypto {
 	}
 	
 	private function rbytes( $size ) {
-		if ( isset( self::$rstate ) ) {
-			self::$rstate	= 
+		if ( isset( static::$rstate ) ) {
+			static::$rstate	= 
 			$this->merge ( 
-				self::$rstate, 
+				static::$rstate, 
 				\random_bytes( $size )
 			);
 		} else {
-			self::$rstate	= \random_bytes( $size );
+			static::$rstate	= \random_bytes( $size );
 		}
 	}
 	
 	private function ossl( $size ) {
 		$strong		= true;
-		self::$rstate	= 
+		static::$rstate	= 
 		$this->merge( 
-			self::$rstate, 
+			static::$rstate, 
 			\openssl_random_pseudo_bytes( $size, $strong ) 
 		);
 	}
 	
 	private function mrand( $size, $src ) {
-		if ( isset( self::$rstate ) ) {
-			self::$rstate	= 
+		if ( isset( static::$rstate ) ) {
+			static::$rstate	= 
 			$this->merge ( 
-				self::$rstate, 
+				static::$rstate, 
 				\mcrypt_create_iv( $size, $src )
 			);
 		} else {
-			self::$rstate	= 
+			static::$rstate	= 
 			\mcrypt_create_iv( $size, $src );
 		}
 	
@@ -300,9 +303,9 @@ final class Crypto {
 	
 	private function frand( $size, $src ) {
 		if ( file_exists( $src ) && is_readable( $src ) ) {
-			self::$rstate	= 
+			static::$rstate	= 
 			$this->merge( 
-				self::$rstate, 
+				static::$rstate, 
 				file_get_contents( 
 					$src, false, null, -1, $size 
 				) 
@@ -397,7 +400,7 @@ final class Crypto {
 		}
 		
 		if ( $level <= 0 ) {
-			return self::$rstate;
+			return static::$rstate;
 		}
 		
 		if ( function_exists( 
@@ -410,7 +413,7 @@ final class Crypto {
 		if ( $level >= 2 ) {
 			$this->frand( self::BLOCK_SIZE, '/dev/random' );
 		}
-		return self::$state;
+		return static::$rstate;
 	}
 	
 	public function bytes( $size, $level = 0 ) {
@@ -422,17 +425,17 @@ final class Crypto {
 			$result .= $this->random( $level );
 		}
 		
-		self::$rstate	= 
+		static::$rstate	= 
 		$this->merge( 
-			self::$rstate, substr( $result, $size ) 
+			static::$rstate, substr( $result, $size ) 
 		);
 		
 		return substr( $result, 0, $size );
 	}
 	
 	private function merge( $src1, $src2 ) {
-		if ( isset( self::$rstate ) ) {
-			$i = ord( self::$rstate ) % 2;
+		if ( isset( static::$rstate ) ) {
+			$i = ord( static::$rstate ) % 2;
 		} else {
 			$i = $this->rnum( 0, 255 ) % 2;
 		}
