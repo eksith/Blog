@@ -57,6 +57,77 @@ class User extends Model {
 		parent::getIsset( $this, $data );
 	}
 	
+	public static function find( array $filter ) {
+		if ( 
+			!isset( $filter['search'] ) || 
+			!isset( $filter['values'] ) 
+		) {
+			return null;
+		}
+		
+		parent::baseFilter( $filter, $id, $limit, $page, $sort );
+		
+		if ( isset( $filter['fields'] ) ) {
+			$fields	= parent::filterFields( $filter['fields'] );
+		} else {
+			$fields = 'email';
+		}
+		
+		$params	= array();
+		$sql	= "SELECT id, username, $fields FROM users";
+		if ( $id > 0 ) {
+			$sql .= 'WHERE id = :id ';
+			$params[':id'] = $id;
+		} else {
+			$sql .= 'WHERE  ';
+			
+			# Find selector
+			if ( is_array( $filter['values'] ) ) {
+				parent::inParam( 
+					$in, $params, $filter['values'] 
+				);
+				$sel .= " IN( $in ) ";
+			} else {
+				$sel			.= ' = :search ';
+				$params[':search']	= $search['values'];
+			}
+			
+			switch ( $filter['search'] ) {
+				case 'username':
+					$sql .= 'username' . $sel:
+					break;
+					
+				case 'email':
+					$sql .= 'email' . $sel:
+					break;
+					
+				case 'user or email':
+					$sql .= 'username' . $sel .
+						'OR email' . $sel;
+					break;
+				
+				case 'status':
+					$sql .= 'status' .$sel;
+					break;
+				
+				# Multiple users by ID
+				case 'ids':
+					$sql .= 'id' .$sel;
+					break;
+			}
+			
+			$params[':limit']	= $limit;
+			$params[':offset']	= ( $page - 1 ) * $limit;
+			$sql			.= 
+			' LIMIT :limit OFFSET :offset;';
+		}
+		
+		if ( $id > 0 ) {
+			return parent::query( $sql, $params, 'class' );
+		}
+		return parent::query( $sql, $params, 'class' );
+	}
+	
 	public function save() {
 		$params	= parent::ifIsset( 
 			$this, 
