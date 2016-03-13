@@ -76,18 +76,25 @@ class Handler extends Events\Listener {
 		return $isAjax;
 	}
 	
+	
+	/**
+	 * Save an encrypted cookie
+	 * 
+	 * @link https://paragonie.com/blog/2015/05/using-encryption-and-authentication-correctly
+	 */
 	protected function saveCookie( $name, $data, $key ) {
 		$data	= base64_encode( $data );
 		$crypto	= $this->getCrypto();
-		$config = $this->dispatcher->getConfig();
+		$config = $this->getConfig();
 		
 		$cookie	= $crypto->encrypt( $data, $key );
 		$hash	= $crypto->genPbk( 
 				$config->getSetting( 'cookie_hash' ), 
-				$data 
+				$key . $data 
 			);
 		
-		return setcookie( 
+		return 
+		setcookie( 
 			$name, 
 			$hash . '|' . $cookie, 
 			time() + $config->getSetting( 'cookie_time' ), 
@@ -98,7 +105,7 @@ class Handler extends Events\Listener {
 	}
 	
 	/**
-	 * Sanitized cookie by name and maximum content size
+	 * Get sanitized cookie by name and maximum content size
 	 */
 	protected function getCookie( $name, $key, $max = 2045 ) {
 		if ( !isset( $_COOKIE[$name] ) ) {
@@ -108,7 +115,7 @@ class Handler extends Events\Listener {
 		if (
 			empty( $_COOKIE[$name] )			|| 
 			mb_strlen( $_COOKIE[$name], '8bit' ) > $max	|| 
-			strrpos( $_COOKIE[$name], '|' ) === false
+			false === strrpos( $_COOKIE[$name], '|' )
 		) {
 			return false;
 		}
@@ -118,10 +125,12 @@ class Handler extends Events\Listener {
 			return false;
 		}
 		
-		$cookie	= $this->getCrypto()->decrypt( $data[1], $key );
-		if ( $this->getCrypto()->verifyPbk( 
-			$cookie, $data[0] 
+		$crypto	= $this->getCrypto();
+		
+		if ( $crypto->verifyPbk( 
+			$key . $data[1], $data[0]
 		) ) {
+			$cookie	= $crypto->decrypt( $data[1], $key );
 			return base64_decode( $cookie, true );
 		}
 		
@@ -177,14 +186,14 @@ class Handler extends Events\Listener {
 		if ( headers_sent() ) {
 			die();
 		}
+		
 		$base	= $this->getRequest()
 				->getUri()
 				->getRoot();
-			
 		$path	= ltrim( $url, '/\\' );
-		
-		$status	= array( 200, 201, 202, 203, 204, 205, 300, 301, 
-			302, 303, 304, 401, 403, 404 );
+		$status	= 
+		array( 200, 201, 202, 203, 204, 205, 300, 301, 302, 303, 
+			304, 401, 403, 404 );
 		
 		if ( !in_array( $code, $status ) ) {
 			$code = 302;
@@ -192,5 +201,37 @@ class Handler extends Events\Listener {
 		
 		header( "Location: $base/$path", true, $code );
 		die();
+	}
+	
+	/**
+	 * Create a hashed path based on a name and directory root.
+	 * The path will be unique as long as the name is unique.
+	 * @example root/c1d/abe/654/0b9/d8a/ac3/a73/c1dabe6540b9d8aac3a73b8ae3b34e121237ee996b966b8d
+	 */
+	protected static function hashPath( 
+		$root, 
+		$name, 
+		$create	= false, 
+		$dlen	= 3, 
+		$depth	= 7 
+	) {
+		$h = hash( 'tiger192,4', $name );
+		$p = array_slice( str_split( $h, $dlen ), 0, $depth );
+		$t = $root . implode( DIRECTORY_SEPARATOR, $p ) . 
+			DIRECTORY_SEPARATOR;
+		
+		# If we're asked to create this path, do so
+		if ( $create && !is_dir( $t ) ) {
+			$s = $root;
+			# Loop because sometimes the recursion flag has issues with mkdir
+			foreach( $p as $d ) {
+				$s .= $d . DIRECTORY_SEPARATOR;
+				# Already exists? Skip.
+				if ( is_dir( $s ) ) { continue; }
+				# Archives only need read/write permissions
+				mkdir( $s, 0600 );
+			}
+		}
+		return $t . $h;
 	}
 }
