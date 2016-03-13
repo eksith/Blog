@@ -55,6 +55,8 @@ class Model {
 	 */
 	protected static $db	= array();
 	
+	protected static $dbType = array();
+	
 	public function __destruct() {
 		static::$db	= null;
 	}
@@ -89,7 +91,7 @@ class Model {
 				'PRAGMA journal_mode = WAL;'
 			);
 		}
-		
+		static::dbType[$name] = $type;
 		return static::$db[$name];
 	}
 	
@@ -168,7 +170,7 @@ class Model {
 			function( $v ){
 				return 
 				preg_replace(
-					'/[^a-zA-Z0-9_]/', '', $v 
+					'/[^a-zA-Z0-9\s\._]/', '', $v 
 				);
 			}, $f );
 		
@@ -213,6 +215,132 @@ class Model {
 		$s = rtrim( ',', $s );
 	}
 	
+ 	/**
+	 * Composite field for multi-column aggregate data from a single table
+	 * E.G. label,term1|label,term2 format
+	 * 
+	 * @param string $table Parent database table
+	 * @param string $field Composite column name
+	 * @param array $fields List of columns to aggregate from parent table
+	 */
+	protected static function aggregateField(
+		$table, 
+		$field, 
+		$fields		= array(),
+		$db		= 'content_store'
+	) {
+		$type		= static::$dbType[$db];
+		/**
+		 * If this is SQLite (I find your lack of faith, disturbing)
+		 */
+		if ( "sqlite" === $type ) {
+			$params	= $table . '.' . 
+				implode( "||','||{$table}.", $fields );
+			return 
+			"GROUP_CONCAT( {$params}, '|' ) AS {$field}";
+		}
+		
+		$params = $table . '.'. 
+			implode( ",',',{$table}.", $fields );
+		
+		/**
+		 * If this is Postgres...
+		 */
+		if ( "postgres" === $type ) {
+			return 
+			"ARRAY_TO_STRING( 
+				ARRAY_AGG( CONCAT( {$params} ) ), '|'
+			) AS {$field}";
+		}
+		
+		/**
+		 * If not, try the MySQL method
+		 */
+		return 
+		"GROUP_CONCAT( CONCAT( {$params} ) SEPARATOR '|' ) AS {$field}";
+	}
+	
+	/**
+	 * Converts label,term1|label,term2 format into
+	 * label (term1, term2) format
+	 * 
+	 * @param string $labels Unformatted string from database
+	 * @returns array
+	 */
+	protected static function parseAggregate( $labels ) {
+		/**
+		 * taxonomy("tags", "categories", "forum" etc...),
+		 * label("computers", "programming", "tech" etc...)
+		 */
+		$params	= array();
+		$taxos	= explode( '|', $labels );
+		
+		foreach( $taxos as $t ) {
+			if ( empty( $t ) ) { continue; }
+			
+			$tx = explode( ',', $t );
+			if ( empty( $tx ) ) { continue; }
+			
+			/**
+			 * Do we have an array for this taxonomy label already?
+			 * If not, create it
+			 */
+			if ( !isset( $params[$tx[0]] ) ) {
+				$params[$tx[0]] = array();
+			}
+			
+			if ( isset( $tx[1] ) ) {
+				$params[$tx[0]][] = $tx[1];
+			}
+		}
+		
+		return $params;
+	}
+	
+	/**
+	 * SQL Query builder 
+	 * 
+	 * @return string SQL
+	 */
+	protected static function buildQuery( 
+		$tables		= array(), 
+		$from		= null, 
+		$where		= null, 
+		$extras		= ''
+	) {
+		$sql = 'SELECT ';
+		foreach( $tables as $t => $fields ) {
+			foreach( $fields as $f ) {
+				$sql .= 
+				is_array( $f ) ? 
+					"$t.$f[0] AS $f[1], " : 
+					"$t.$f AS $f, ";
+			}
+		}
+		$sql	= rtrim( $sql, ', ' ) . $extras;
+		
+		if ( null !== $from ) {
+			$sql .= ' FROM ' . $from;
+		}
+		
+		if ( !empty( $where ) && is_array( $where ) ) {
+			$sql .= ' WHERE ';
+		
+			foreach( $where as $t => $f ) {
+				#foreach( $fields as $f ) {
+					$sql .= "$t.$f[0] = $f[1] ";
+					if ( isset( $f[2] ) ) {
+						$sql .= $f[2] . ' ';
+					}
+				#}
+			}
+			$sql	= rtrim( $sql );
+		} elseif ( !empty( $where ) ) {
+			$sql .= rtrim( ' WHERE ' . $where );
+		}
+		return $sql;
+	}
+	
 	protected static function query( 
 		$sql, 
 		$params, 
@@ -233,11 +361,37 @@ class Model {
 		} else {
 			switch( $class ) {
 				case 'class' :
-					$result = $stm->fetchAll( 
+					$result = 
+					$stm->fetchAll( 
 						\PDO::FETCH_CLASS, 
 						get_called_class() 
 					);
 					break;
+					
+				case 'column':
+					$result	= 
+					$stmt->fetchALL( 
+						\PDO::FETCH_COLUMN, 0 
+					);
+					break;
+					
+				case 'group':
+					$result = 
+					$stmt->fetchALL( 
+						\PDO::FETCH_COLUMN|
+						\PDO::FETCH_GROUP
+					);
+					break;
+					
+				case 'row':
+					$data = 
+					$stmt->fetchAll( 
+						\PDO::FETCH_ASSOC 
+					);
+					if ( count( $data ) ) {
+						$result =  $data[0];
+					}
+					$result = array();
 					
 				default:
 					$result	=  $stm->fetchAll();
