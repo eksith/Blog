@@ -48,8 +48,6 @@ class Create extends ContentHandler {
 	}
 	
 	private function save( $data, Events\Event $event ) {
-		$filter			= $this->getHtmlFilter();
-		
 		$post			= new Models\Post();
 		$this->basePost( $data, $post );
 		
@@ -59,7 +57,15 @@ class Create extends ContentHandler {
 		$post->user_id		= $event->get( 'user_id' );
 		
 		if ( $post->id ) {
-			$this->redirect( '/manage/edit/' . $post->id, 201 );
+			if ( $post->user_id ) {
+				$this->redirect( 
+					'/manage/edit/' . $post->id, 201 
+				);
+			} else {
+				$this->redirect(
+					'/read/' . $post->id, 201
+				);
+			}
 		} else {
 			# This is terrible
 			# TODO Some error handling
