@@ -33,29 +33,21 @@ class Block extends Model {
 	}
 	
 	public static function find( array $search ) {
-		if ( !isset( $search['terms'] ) ) {
+		if ( !isset( $search['label'] ) ) {
 			return array();
 		}
 		
 		$params = array();
 		$sql	= 
-		"SELECT label, expires_at FROM blocks WHERE ";
+		"SELECT label, term, expires_at FROM blocks WHERE ";
 		
-		if ( is_array( $search['terms'] ) ) {
-			$this->inParam( $in, $params, $search['terms'] );
-			$sql .= "term IN ( $in )";
+		if ( is_array( $search['label'] ) ) {
+			parent::inParam( $in, $params, $search['label'] );
+			$sql .= "label IN ( $in );";
 		} else {
-			$params[':term']	= $search['terms'];
-			$sql			.= 'term = :term';
-		}
-		
-		
-		if ( isset( $search['label'] ) ) {
 			$params[':label']	= $search['label'];
-			$sql			.= ' AND label = :label';
+			$sql			.= 'label = :label;';
 		}
-		
-		$sql .= ';';
 		
 		return 
 		parent::query( $sql, $params, 'class', 'firewall_store' );
@@ -65,9 +57,7 @@ class Block extends Model {
 	public function save() {
 		$params	= parent::ifIsset( 
 			$this, 
-			array( 
-				'label', 'term', 'expires_at'
-			)
+			array( 'label', 'term', 'expires_at' )
 		);
 		
 		if ( isset( $this->id ) ) {
