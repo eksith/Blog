@@ -7,7 +7,7 @@ class Manage extends Views\View {
 	
 	public function __construct( Events\Dispatcher $dispatcher ) {
 		parent::__construct( $dispatcher );
-		$this->setTheme( 'admin' );
+		$this->setTheme( $this->getSetting( 'theme_admin' ) );
 	}
 	
 	public function handleEvent( Events\Event $event ) {
