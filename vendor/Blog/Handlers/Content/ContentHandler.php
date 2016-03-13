@@ -21,17 +21,20 @@ class ContentHandler extends Handlers\Handler {
 	 * Load base properties for both creating and editing a post
 	 */
 	protected function basePost( $data, &$post ) {
+		$filter			= $this->getHtmlFilter();
+		
 		$post->title		= empty( $data['title'] ) ?
 			'Untitled' : $data['title'];
 		
 		$post->raw		= empty( $data['body'] ) ? 
 			'' : $data['body'];
 		
-		$post->summary		= empty( $data['summary'] ) ? 
-			'' : $filter->clean( $data['summary'], false );
-		
 		$post->body		= $filter->clean( $post->raw );
 		$post->plain		= strip_tags( $post->body );
+		
+		$post->summary		= empty( $data['summary'] ) ? 
+			$this->smartTrim( $post->plain ) : 
+			$filter->clean( $data['summary'], false );
 		
 		$pub			=  empty( $data['pubdate'] ) ?
 			time() : strtotime( $data['pubdate'] . ' UTC' );
@@ -93,7 +96,7 @@ class ContentHandler extends Handlers\Handler {
 	/**
 	 * Twitter style #hashtags link formatting
 	 */
-	protected function hashtags( 
+	protected static function hashtags( 
 		$body, 
 		$hfx, 
 		$ufx, 
@@ -122,5 +125,30 @@ class ContentHandler extends Handlers\Handler {
 			$body
 		);
 		return $body;
+	}
+	
+	/**
+	 * Memory formatting
+	 */
+	protected static function formatBytes( $bytes, $precision = 2 ) {
+		$units	= array('B', 'KB', 'MB', 'GB', 'TB');
+		
+		$bytes	= max( $bytes, 0 );
+		$pow	= floor( ( $bytes ? log( $bytes ) : 0 ) / log( 1024 ) );
+		$pow	= min( $pow, count( $units ) - 1 );
+		
+		return round( $bytes, $precision ) . ' ' . $units[$pow];
+	}
+	
+	/**
+	 * Create a URL based on the date and title
+	 * @example /2015/02/26/how-the-west-was-won
+	 */
+	protected static function datePath( 
+		$title, 
+		$time	= null 
+	) {
+		$p = ( null == $time ) ? date( 'Y/m/d' ) : date( 'Y/m/d', $time );
+		return $p . '/' . static::slugify( $title );
 	}
 }
