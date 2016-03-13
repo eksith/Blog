@@ -40,3 +40,8 @@ CREATE TRIGGER block_before_delete BEFORE DELETE ON blocks FOR EACH ROW
 BEGIN
 	DELETE FROM block_search WHERE docid = OLD.rowid;
 END;
+
+
+PRAGMA encoding = "UTF-8";
+PRAGMA main.secure_delete = TRUE;
+PRAGMA cache_size = 16384;
