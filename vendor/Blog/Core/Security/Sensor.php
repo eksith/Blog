@@ -286,6 +286,10 @@ class Sensor {
 	
 	/**
 	 * Prepare host for database search
+	 * 
+	 * https://secure.php.net/manual/de/function.gethostbyaddr.php
+	 * http://us2.php.net/manual/en/function.idn-to-ascii.php
+	 * https://github.com/koraktor/steam-condenser/issues/154
 	 */
 	private function getHostRange( $ip ) {
 		if ( $this->getSetting( 'firewall_local' ) ) {
