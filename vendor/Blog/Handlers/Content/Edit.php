@@ -69,16 +69,13 @@ class Edit extends ContentHandler {
 	}
 	
 	private function findPost( $id ) {
-		# TODO
-		$post = new Models\Post();
-		
-		$post->id = $id;
-		return $post;
+		return 
+		Models\Post::find( 
+			array( 'search' => 'id', 'values' => $id ) 
+		);
 	}
 	
 	private function save( $data ) {
-		$filter			= $this->getHtmlFilter();
-		
 		$data['id']		= empty( $data['id'] ) ?
 			0 : abs( ( int ) $data['id'] );
 		
