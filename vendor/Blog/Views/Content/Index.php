@@ -1,41 +1,56 @@
 <?php
 
 namespace Blog\Views\Content;
+use Blog\Models;
 use Blog\Events;
 use Blog\Views;
 
 class Index extends Views\View {
 	
+	protected $post_map = 
+	array(
+		'post_author'	=> 'author',
+		'post_title'	=> 'title',
+		'date_u'	=> 'pub',
+		'date'		=> 'published_at',
+		'post_id'	=> 'id',
+		'post_tags'	=> 'tags'
+	);
+	
 	public function __construct( Events\Dispatcher $dispatcher ) {
 		parent::__construct( $dispatcher );
-		$this->setTheme( 'default' );
+		$this->setTheme( $this->getSetting( 'theme_default' ) );
 	}
 	
 	public function index( Events\Event $event ) {
 		$conds		= array();
 		
-		$title		= 'test heading';
+		$title		= $this->getSetting( 'blog_name' );
+		$tagline	= $this->getSetting( 'blog_tagline' );
+		$uri		= $this->getRequest()
+					->getUri()
+					->getRoot();
+		
 		$vars		= 
 		array(
-			'heading'	=> $title,
+			'heading'	=> $title . ' - ' $tagline,
 			'page_title'	=> $title,
-			'host_uri'	=> $_SERVER['SERVER_NAME'],
+			'host_uri'	=> $uri,
 			'theme'		=> $this->getThemeDisplay()
 		);
 		
+		# Test
+		$test		= new Models\Post();
+		$test->id	= 12;
+		$test->title	= 'test title';
+		$test->author	= 'author';
 		
-		$threads	= 
-		array(
-			array(
-				'post_author'	=> 'author',
-				'post_title'	=> 'test title',
-				'date_u'	=> 'date_u',
-				'date'		=> 'date',
-				'post_id'	=> '12',
-				'post_tags'	=> 'tags'
-			)
-		);
-		$this->addState( 'threads', $threads );
+		$posts		= array( $test );
+		$parsed		= $this->mapObjToPlace( 
+					$posts, $this->post_map
+				);
+		
+		$this->addState( 'posts', $posts );
 		echo $this->sendView( 'forum.html', $conds, $vars );
 	}
 	
