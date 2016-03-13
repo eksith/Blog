@@ -68,6 +68,27 @@ class Post extends Model {
 	public $root_id;
 	
 	/**
+	 * Content root (main topic) title
+	 * 
+	 * @var string
+	 */
+	public $root_title;
+	
+	/**
+	 * Plaintext summary/description of the post root
+	 * 
+	 * @var string
+	 */
+	public $root_summary;
+	
+	/**
+	 * Content root status
+	 * 
+	 * @var int
+	 */
+	public $root_status;
+	
+	/**
 	 * Reply parent
 	 * 
 	 * @var int
@@ -75,11 +96,41 @@ class Post extends Model {
 	public $parent_id	= 0;
 	
 	/**
+	 * Content parent title
+	 * 
+	 * @var string
+	 */
+	public $parent_title;
+	
+	/**
+	 * Plaintext summary/description of the parent post
+	 * 
+	 * @var string
+	 */
+	public $parent_summary;
+	
+	/**
+	 * Content parent status
+	 * 
+	 * @var int
+	 */
+	public $parent_status;
+	
+	/**
 	 * Published date (empty if unpublished)
 	 * 
 	 * @var string
 	 */
 	public $published_at;
+	
+	
+	/**
+	 * A an array of ID => title relationships denoting all the 
+	 * parents this post has. Should be empty if this is root
+	 * 
+	 * @var array
+	 */
+	public $breadcrumb;
 	
 	/**
 	 * Categorization and grouping taxonomy
@@ -122,7 +173,7 @@ class Post extends Model {
 	public static function find( array $filter ) {
 		if ( 
 			!isset( $filter['search'] ) || 
-			!isset( $filter['value'] ) 
+			!isset( $filter['values'] ) 
 		) {
 			return null;
 		}
@@ -130,14 +181,31 @@ class Post extends Model {
 		parent::baseFilter( $filter, $id, $limit, $page, $sort );
 		
 		if ( isset( $filter['fields'] ) ) {
-			$fields	= parent::filterFields( $filter['fields'] );
+			$s = parent::filterFields( 
+					$filter['fields'] 
+				);
+			$a = 
+			array_map( function($k) {
+				return 'posts.' . $k . ' AS ' . $k;
+			}, explode( ',' $s ) );
+			
+			$fields = implode( ',', $a );
 		} else {
-			$fields = 'body,summary';
+			$fields = 
+			'posts.body AS body, posts.summary AS summary';
 		}
+		
+		# TODO breadrumbs
+		# https://sqlite.org/lang_with.html
+		# https://stackoverflow.com/questions/192220/what-is-the-most-efficient-elegant-way-to-parse-a-flat-table-into-a-tree?rq=1
 		
 		$params	= array();
 		$sql	= 
 		"SELECT posts.id AS id, posts.title AS title, 
+		p.title AS parent_title, p.status AS parent_status, 
+		p.summary AS parent_summary, 
+		r.title AS root_title, r.status AS root_status, 
+		r.summary AS root_summary, 
 		posts.root_id AS root_id, posts.parent_id AS parent_id, 
 		posts.status AS status, posts.created_at AS created_at, 
 		posts.updated_at AS updated_at,	
@@ -146,7 +214,9 @@ class Post extends Model {
 		COALESCE( u.display, u.username, 'Anonymous' ) AS author,
 		u.username AS username, $fields 
 		
-		FROM posts INNER JOIN posts AS p ON posts.parent_id = p.id
+		FROM posts 
+		LFET JOIN posts AS p ON posts.parent_id = p.id 
+		LFET JOIN posts AS r ON posts.root_id = r.id 
 		LEFT JOIN users AS u ON posts.user_id = u.id";
 		
 		if ( $id > 0 ) {
@@ -164,7 +234,7 @@ class Post extends Model {
 		if ( $id > 0 ) {
 			return parent::query( $sql, $params, 'class' );
 		}
-		return parent::query( $sql, $params, new Post() );
+		return parent::query( $sql, $params, 'class' );
 	}
 	
 	public function save() {
