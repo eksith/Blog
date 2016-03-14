@@ -68,13 +68,16 @@ class User extends Model {
 		parent::baseFilter( $filter, $id, $limit, $page, $sort );
 		
 		if ( isset( $filter['fields'] ) ) {
-			$fields	= parent::filterFields( $filter['fields'] );
+			$fields	=	parent::filterFields( 
+						$filter['fields'] 
+					);
 		} else {
 			$fields = 'email';
 		}
 		
 		$params	= array();
-		$sql	= "SELECT id, username, $fields FROM users";
+		$sql	= '';
+		
 		if ( $id > 0 ) {
 			$sql .= 'WHERE id = :id ';
 			$params[':id'] = $id;
@@ -116,11 +119,20 @@ class User extends Model {
 					break;
 			}
 			
+			$sql = "SELECT id, username, $fields 
+				FROM users $sql";
+			
 			$params[':limit']	= $limit;
 			$params[':offset']	= ( $page - 1 ) * $limit;
 			$sql			.= 
-			' LIMIT :limit OFFSET :offset;';
+			' LIMIT :limit OFFSET :offset';
 		}
+		
+		if ( !empty( $sort ) ) {
+			$sort = parent::filterFields( $sort );
+			$sql .= " ORDER BY $sort";
+		}
+		$sql .= ';';
 		
 		if ( $id > 0 ) {
 			return parent::query( $sql, $params, 'class' );
