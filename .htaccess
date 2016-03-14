@@ -1,0 +1,15 @@
+Options +FollowSymLinks
+
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|inc|bak|sqlite|sqlite3)$">
+Order Allow,Deny
+Deny from all
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L]
+</IfModule>
