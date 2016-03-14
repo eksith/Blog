@@ -44,8 +44,8 @@ $router		= new Blog\Core\Router( $request, $sender );
 
 
 # Index routes
-$router->add( 'get', '', array( '\\Blog\\Routes\\HomeRoute', 'index' ) );
-$router->add( 'get', 'page:page', array( '\\Blog\\Routes\\HomeRoute', 'index' ) );
+$router->add( 'get', '', array( '\\Blog\\Routes\\ContentRoute', 'index' ) );
+$router->add( 'get', 'page:page', array( '\\Blog\\Routes\\ContentRoute', 'index' ) );
 
 
 # Archives
@@ -69,11 +69,13 @@ $router->add( 'get', 'read/:year/:month/:day/:slug/page:page', array( '\\Blog\\R
 
 # View created posts
 $router->add( 'get', 'manage/posts', array( '\\Blog\\Routes\\ContentRoute', 'viewPosts' ) );
-$router->add( 'get', 'manage/posts/:page', array( '\\Blog\\Routes\\ContentRoute', 'viewPosts' ) );
+$router->add( 'get', 'manage/posts/page:page', array( '\\Blog\\Routes\\ContentRoute', 'viewPosts' ) );
 Blog\Routes\Route::addSecureRoute( 'manage/posts' ); # Authorized users may enter
 
 # Create post
 $router->add( 'get', 'manage/new', array( '\\Blog\\Routes\\ContentRoute', 'creatingPost' ) );
+# Create reply
+$router->add( 'get', 'manage/new/:id', array( '\\Blog\\Routes\\ContentRoute', 'creatingPost' ) );
 $router->add( 'post', 'manage/new', array( '\\Blog\\Routes\\ContentRoute', 'createPost' ) );
 Blog\Routes\Route::addSecureRoute( 'manage/new' ); 
 
@@ -105,14 +107,16 @@ Blog\Routes\Route::setLogoutRoute( 'manage/logout' );
 # User Profile
 $router->add( 'get', 'manage/profile', array( '\\Blog\\Routes\\UserRoute', 'profileView' ) );
 $router->add( 'post', 'manage/profile', array( '\\Blog\\Routes\\UserRoute', 'profileChanged' ) );
+Blog\Routes\Route::addSecureRoute( 'manage/profile' );
 
 # User password changed
 $router->add( 'post', 'manage/changepass', array( '\\Blog\\Routes\\UserRoute', 'passChanged' ) );
+Blog\Routes\Route::addSecureRoute( 'manage/changepass' );
 
 # User deletion
 $router->add( 'get', 'manage/deleteuser', array( '\\Blog\\Routes\\UserRoute', 'deleteView' ) );
 $router->add( 'post', 'manage/deleteuser', array( '\\Blog\\Routes\\UserRoute', 'delete' ) );
-Blog\Routes\Route::addSecureRoute( 'manage/profile' );
+Blog\Routes\Route::addSecureRoute( 'manage/deleteuser' );
 
 # Send the route
 $router->route( $markers );
