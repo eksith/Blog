@@ -8,11 +8,11 @@ class Create extends Views\View {
 	
 	public function __construct( Events\Dispatcher $dispatcher ) {
 		parent::__construct( $dispatcher );
-		$this->setTheme( 'admin' );
+		$this->setTheme( $this->getSetting( 'theme_admin' ) );
 	}
 	
 	public function creatingPost( Events\Event $event ) {
-		$parent	= $event->get('parent');
+		$parent	= $event->get( 'id' );
 		$parent	= empty( $parent ) ? 0 : $parent;
 		
 		$title	= $event->get( 'parent_title' );
