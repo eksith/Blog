@@ -39,7 +39,7 @@ class Edit extends ContentHandler {
 		$post			= 
 		Models\Post::find(
 			'search'	=> 'id',
-			'value'		=> $event->get( 'post_id' );
+			'value'		=> $event->get( 'id' );
 			'fields'	=> 'raw,summary'
 		);
 		
