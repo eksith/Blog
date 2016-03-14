@@ -32,6 +32,14 @@ CREATE INDEX idx_posts_on_status ON posts ( status );
 CREATE VIRTUAL TABLE posts_search USING fts4 ( search_data );
 
 
+CREATE TABLE post_family (
+	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+	parent_id INTEGER NOT NULL, 
+	child_id INTEGER NOT NULL
+);
+CREATE INDEX idx_post_family ON post_family ( parent_id ASC, child_id DESC );
+
+
 
 -- Post triggers
 CREATE TRIGGER post_after_insert AFTER INSERT ON posts FOR EACH ROW 
@@ -56,15 +64,21 @@ BEGIN
 	UPDATE posts SET root_id = NEW.rowid, parent_id = NEW.rowid, 
 		reply_at = CURRENT_TIMESTAMP 
 		WHERE posts.id = NEW.rowid;
+	
+	INSERT INTO post_family ( parent_id, child_id ) 
+		VALUES ( NEW.rowid, NEW.rowid );
 END;
 
 CREATE TRIGGER new_reply AFTER INSERT ON posts
 WHEN NEW.root_id <> 0 AND NEW.parent_id = 0
 BEGIN
 	UPDATE posts SET reply_at = CURRENT_TIMESTAMP WHERE posts.id = NEW.root_id;
+	
+	INSERT INTO post_family ( parent_id, child_id ) 
+		VALUES ( NEW.root_id, NEW.rowid );
 END;
 
-CREATE TRIGGER new_parent AFTER INSERT ON posts
+CREATE TRIGGER new_child AFTER INSERT ON posts
 WHEN NEW.parent_id <> 0
 BEGIN
 	-- Fix missing root_id by getting it from the parent's root
@@ -82,6 +96,9 @@ BEGIN
 			SELECT root_id FROM posts 
 			WHERE posts.id = NEW.rowid AND parent_id != NEW.parent_id LIMIT 1
 		);
+	
+	INSERT INTO post_family ( parent_id, child_id ) 
+		VALUES ( NEW.parent_id, NEW.rowid );
 END;
 
 
@@ -89,7 +106,12 @@ CREATE TRIGGER post_before_delete BEFORE DELETE ON posts FOR EACH ROW
 BEGIN
 	UPDATE posts SET reply_count = ( reply_count - 1 ) 
 		WHERE id != OLD.rowid AND ( id = OLD.root_id OR id = OLD.parent_id );
+	
 	DELETE FROM posts_search WHERE docid = OLD.rowid;
+	
+	-- This may create orphans
+	DELETE FROM post_family 
+		WHERE child_id = OLD.rowid OR parent_id = OLD.rowid;
 END;
 
 
