@@ -85,7 +85,7 @@ class Model {
 		static::$db[$name]	= 
 			new \PDO( $dsn, $username, $password, $options );
 		
-		// If this is sqlite, enable Write-Ahead Logging
+		# If this is sqlite, enable Write-Ahead Logging
 		if ( 'sqlite' == $type ) {
 			static::$db[$name]->exec(
 				'PRAGMA journal_mode = WAL;'
@@ -165,12 +165,13 @@ class Model {
 	}
 	
 	protected static function filterFields( $fields ) {
-		$f = explode( $fields );
+		$f = explode( ',', $fields );
 		$f = array_map( 
 			function( $v ){
 				return 
 				preg_replace(
-					'/[^a-zA-Z0-9\s\._]/', '', $v 
+					'/[^a-zA-Z0-9\s\._]/', 
+					'', trim( $v ) 
 				);
 			}, $f );
 		
@@ -230,6 +231,7 @@ class Model {
 		$db		= 'content_store'
 	) {
 		$type		= static::$dbType[$db];
+		
 		/**
 		 * If this is SQLite (I find your lack of faith, disturbing)
 		 */
@@ -351,7 +353,7 @@ class Model {
 		$stm->execute( $params );
 		
 		if ( empty( $class ) ) {
-			$result	=  $stm->fetchAll();
+			$result	= $stm->fetchAll();
 			
 		} elseif( 'object' == gettype( $class ) ) {
 			$result = $stm->fetchAll( 
@@ -378,7 +380,7 @@ class Model {
 				case 'group':
 					$result = 
 					$stmt->fetchALL( 
-						\PDO::FETCH_COLUMN|
+						\PDO::FETCH_COLUMN | 
 						\PDO::FETCH_GROUP
 					);
 					break;
@@ -417,6 +419,16 @@ class Model {
 		return $stm->execute( $params );
 	}
 	
+	/**
+	 * Insert a new record into the specified table using the given 
+	 * parameters
+	 * 
+	 * @param string $table Single table name
+	 * @param array $params Matching column names and values
+	 * 			Note: No need to add colons ':'
+	 * @param string $db Optional database name override
+	 * @return Last inserted ID
+	 */
 	protected function put(
 		$table,
 		$params = array(),
@@ -432,6 +444,16 @@ class Model {
 		return $db->lastInsertId(); 
 	}
 	
+	/**
+	 * Edit a record by given ID
+	 * 
+	 * @param string $table Single table name
+	 * @param mixed $id Identifier ( table must have 'id' field )
+	 * @param array $params Matching column names and values
+	 * 			Note: No need to add colons ':'
+	 * @param string $db Optional database name override
+	 * @return Rows affected
+	 */
 	protected function edit(
 		$table,
 		$id,
