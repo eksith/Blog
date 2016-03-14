@@ -1,6 +1,7 @@
 <?php
 
 namespace Blog\Routes;
+use Blog\Language;
 use Blog\Handlers;
 use Blog\Views;
 
