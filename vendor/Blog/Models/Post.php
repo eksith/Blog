@@ -166,6 +166,13 @@ class Post extends Model {
 		return null;
 	}
 	
+	public function __set( $name, $value ) {
+		switch( $name ) {
+			case 'raw_breadcrumb':
+				break;
+		}
+	}
+	
 	public function __construct( $data = array() ) {
 		parent::ifIsset( $this, $data );
 	}
@@ -181,15 +188,15 @@ class Post extends Model {
 		parent::baseFilter( $filter, $id, $limit, $page, $sort );
 		
 		if ( isset( $filter['fields'] ) ) {
-			$s = parent::filterFields( 
-					$filter['fields'] 
-				);
-			$a = 
-			array_map( function($k) {
+			$fields	=	parent::filterFields( 
+						$filter['fields'] 
+					);
+			$cols	= 
+			array_map( function( $k ) {
 				return 'posts.' . $k . ' AS ' . $k;
-			}, explode( ',' $s ) );
+			}, explode( ',' $fields ) );
 			
-			$fields = implode( ',', $a );
+			$fields = implode( ',', $cols );
 		} else {
 			$fields = 
 			'posts.body AS body, posts.summary AS summary';
@@ -199,24 +206,32 @@ class Post extends Model {
 		# https://sqlite.org/lang_with.html
 		# https://stackoverflow.com/questions/192220/what-is-the-most-efficient-elegant-way-to-parse-a-flat-table-into-a-tree?rq=1
 		
+		#p.title AS parent_title, p.status AS parent_status, 
+		#p.summary AS parent_summary, 
+		#r.title AS root_title, r.status AS root_status, 
+		#r.summary AS root_summary, 
+		
+		#LFET JOIN posts AS p ON posts.parent_id = p.id 
+		#LFET JOIN posts AS r ON posts.root_id = r.id 
+		
 		$params	= array();
 		$sql	= 
 		"SELECT posts.id AS id, posts.title AS title, 
-		p.title AS parent_title, p.status AS parent_status, 
-		p.summary AS parent_summary, 
-		r.title AS root_title, r.status AS root_status, 
-		r.summary AS root_summary, 
+		
 		posts.root_id AS root_id, posts.parent_id AS parent_id, 
 		posts.status AS status, posts.created_at AS created_at, 
 		posts.updated_at AS updated_at,	
 		posts.reply_count AS reply_count, 
 		posts.reply_at AS reply_at, posts.user_id AS user_id, 
 		COALESCE( u.display, u.username, 'Anonymous' ) AS author,
-		u.username AS username, $fields 
+		u.username AS username, $fields, 
+		GROUP_CONCAT(parent.parent_id AS bread_id, ',')
 		
 		FROM posts 
-		LFET JOIN posts AS p ON posts.parent_id = p.id 
-		LFET JOIN posts AS r ON posts.root_id = r.id 
+		JOIN post_family AS parent ON posts.id = parent.child_id 
+		JOIN post_family AS family ON parent.child_id = family.child_id
+		LEFT JOIN posts AS p on parent.parent_id = p.id 
+		
 		LEFT JOIN users AS u ON posts.user_id = u.id";
 		
 		if ( $id > 0 ) {
