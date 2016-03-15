@@ -6,6 +6,28 @@ use Blog\Events;
 
 class View extends Handlers\Handler {
 	
+	/**
+	 * @var array Display placeholder to post property map
+	 */
+	protected $post_map	= 
+	array(
+		'post_author'	=> 'author',
+		'post_title'	=> 'title',
+		'date_u'	=> 'pub',
+		'date'		=> 'published_at',
+		'post_id'	=> 'id',
+		'post_tags'	=> 'tags'
+	);
+	
+	/**
+	 * @var array Tag display placeholder to tag property map
+	 * #TODO
+	 */
+	protected $tag_map	= 
+	array(
+		
+	);
+	
 	private $theme		= 'default';
 	
 	/**
