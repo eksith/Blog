@@ -91,7 +91,7 @@ class Model {
 				'PRAGMA journal_mode = WAL;'
 			);
 		}
-		static::dbType[$name] = $type;
+		static::$dbType[$name] = $type;
 		return static::$db[$name];
 	}
 	
@@ -175,7 +175,7 @@ class Model {
 				);
 			}, $f );
 		
-		return implode( ',' $f );
+		return implode( ',', $f );
 	}
 	
 	protected static function baseFilter( 
