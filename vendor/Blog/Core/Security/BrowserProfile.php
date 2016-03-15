@@ -6,6 +6,7 @@ class BrowserProfile {
 	
 	private $browser;
 	private $header_hash;
+	private $lang;
 	private $rawsig;
 	private $sig;
 	
@@ -312,6 +313,9 @@ class BrowserProfile {
 			hash( self::SIGNATURE_HASH, $match );
 	}
 	
+	/**
+	 * Sent HTTP headers
+	 */
 	public function headers( $key = null ) {
 		if ( !isset( $this->sent_headers ) ) {
 			$this->sent_headers = $this->httpHeaders();
@@ -322,9 +326,65 @@ class BrowserProfile {
 		}
 		
 		return isset( $this->sent_headers[$key] )? 
-			$this->sent_headers[$key] : null;
+				$this->sent_headers[$key] : null;
 	}
 	
+	/**
+	 * Best effort language detection by priority
+	 */
+	public function languages( array $supported ) {
+		if ( isset( $this->lang ) ) {
+			return $this->lang;
+		}
+		
+		$raw	= $this->headers( 'Accept-Language' );
+		if ( empty( $raw ) ) {
+			$this->lang	= array( 'en' => '1.0' );
+			return $this->lang;
+		}
+		
+		$raw	= preg_replace( '/[^\w\-,.;=]/', '', $raw );
+		
+		$header	= strtolower( $raw );
+		$langs	= array();
+		
+		preg_match_all(
+			'~([\w-]+)(?:[^,\d]+([\d.]+))?~',
+			$header, $matches, \PREG_SET_ORDER
+		);
+		
+		foreach ( $matches as $match ) {
+			list( $code, $region )		= 
+				explode( '-', $match[1] ) + 
+				array( '', '' );
+			
+			$priority			= 
+			isset( $match[2] ) ? 
+				( float ) $match[2] : 1.0;
+			
+			if ( isset( $supported[$match[1]] ) ) {
+				$langs[$match[1]]	= $priority;
+				continue;
+			}
+			
+			if ( isset( $supported[$code] ) ) {
+				$langs[$code]		= 
+					$priority - 0.1;
+			}
+		}
+		
+		if ( empty( $langs ) ) {
+			$langs	= array( 'en' => '1.0' );
+		}
+		
+		arsort( $langs );
+		$this->lang = $langs;
+		return $langs;
+	}
+	
+	/**
+	 * Process HTTP_* variables
+	 */
 	private function httpHeaders() {
 		$val = array();
 		foreach ( $_SERVER as $k => $v ) {
