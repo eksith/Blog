@@ -46,7 +46,7 @@ final class Config {
 			$data	= trim( html_entity_decode( CONFIG ) );
 			$data	= 
 			json_decode( 
-				preg_replace( '/\s+/', '', $data ),
+				$data,
 				true, 
 				self::DECODE_DEPTH 
 			);
