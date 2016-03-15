@@ -13,16 +13,29 @@ class Locale extends Views\View {
 	protected $direction;
 	
 	protected $map = array(
-		'en-us' => 'EnglishUS'
+		'en-us'	=> 'EnglishUS'
 	);
 	
+	# https://stackoverflow.com/questions/19249159/best-practice-multi-language-website?rq=1
 	public function handleEvent( Events\Event $event ) {
 		$name	= $event->get( 'locale' );
 		if ( empty( $name ) || empty( $this->map[$name] ) ) {
-			$lang = $this->setLang( 'en-us', $event );
-		} else {
-			$lang = $this->setLang( $name, $event );
+			$name = $this->processLocale( $event );
+			$event->set( 'locale', $name );
 		}
+		
+	}
+	
+	private function processLocale( Events\Event $event ) {
+		$langs	= $event->getRequest()
+				->getBrowserProfile()
+				->languages( $this->map );
+		
+		if ( empty( $langs ) ) {
+			return 'en-us';
+		}
+		
+		return array_keys( $langs )[0];
 	}
 	
 	private function setLang( $name, Events\Event $event ) {
