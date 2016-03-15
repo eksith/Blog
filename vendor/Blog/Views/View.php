@@ -519,9 +519,23 @@ class View extends Handlers\Handler {
 	protected function loadFile( $name ) {
 		$name	= $this->getTheme() . $name;
 		if ( file_exists( $name ) ) {
-			return file_get_contents(  $name );
+			$data = file_get_contents( $name );
+			if ( false !== strpos( $data, '<?' ) ) {
+				$this->finish(
+					false
+					'Server-side code detected in ' . 
+					'template file. Exiting.'
+				);
+			}
+			
+			return $data;
+			
+		} else {
+			$this->finish( 
+				false, 
+				'Error loading template. Exiting.' 
+			);
 		}
-		return '';
 	}
 	
 	/**
@@ -600,6 +614,7 @@ class View extends Handlers\Handler {
 			return;
 		}
 		
+		header_remove( 'X-Powered-By' );
 		header( 'X-Frame-Options: deny' );
 		header( 'X-XSS-Protection: 1; mode=block' );
 		header( 'X-Content-Type-Options: nosniff' );
@@ -615,7 +630,7 @@ class View extends Handlers\Handler {
 		
 		$headers[] = "MIME-Version: 1.0";
 		$headers[] = "Content-type: text/plain; charset=utf-8";
-		$headers[] = "From: Thebes <thebesforum@gmail.com>";
+		$headers[] = "From: Thebes <contact@example.com>";
 		$headers[] = "Reply-To: {$name} <{$to}>";
 		$headers[] = "Subject: {$subject}";
 		$headers[] = "X-Mailer: Thebes 0.3";
