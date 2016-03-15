@@ -33,7 +33,10 @@ class EnglishUS {
 		
 		'register'	=> 'Register',
 		'remember'	=> 'Remember me',
-		'login'		=> 'Login'
+		'login'		=> 'Login',
+		
+		'next_page'	=> 'Next',
+		'prev_page'	=> 'Previous'
 	);
 	
 	public function __construct( Events\Event $event ) {
