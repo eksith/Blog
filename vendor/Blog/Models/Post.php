@@ -137,22 +137,22 @@ class Post extends Model {
 	 * 
 	 * @var array
 	 */
-	public $taxonomy;
+	public $taxonomy	= array();
 	
 	/**
 	 * Metadata and associated optional fields
 	 * 
 	 * @var array
 	 */
-	public $meta;
+	public $meta		= array();
 	
 	public function __get( $name ) {
 		switch( $name ) {
 			case 'tags':
 			case 'categories':
 				return 
-				isset( $taxonomy[$name] ) ?
-					$taxonomy[$name] : array();
+				isset( $this->taxonomy[$name] ) ?
+					$this->taxonomy[$name] : array();
 				
 			case 'date_u':
 				return
@@ -194,7 +194,7 @@ class Post extends Model {
 			$cols	= 
 			array_map( function( $k ) {
 				return 'posts.' . $k . ' AS ' . $k;
-			}, explode( ',' $fields ) );
+			}, explode( ',', $fields ) );
 			
 			$fields = implode( ',', $cols );
 		} else {
