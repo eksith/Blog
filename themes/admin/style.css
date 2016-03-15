@@ -13,7 +13,8 @@
 	outline:		none;
 }
 
-body, article, header, footer, nav, main, section, aside {
+body, article, header, footer, nav, main, section, aside, figure, 
+figcaption, canvas {
 	display:		block;
 }
 
@@ -47,6 +48,7 @@ footer {
 	font-size:		.85em;
 	padding:		1em;
 	color:			#777;
+	text-align:		center;
 }
 header, footer, .container {
 	width:			80%;
@@ -135,18 +137,42 @@ hr {
 	margin:			1em 0;
 	border-bottom:		1px solid #cdcdcd;
 }
+img, a img {
+	border:			0;
+}
+figure {
+	display:	block;
+	max-width:	1200px;
+	width:		80%;
+	margin:		2em auto;
+	padding:	.5em;
+	border:		1px solid #ccc;
+	background:	#eee;
+}
+figcaption {
+	margin-top:	.3em;
+	display:	block;
+	font-style:	italic;
+	color:		#555;
+}
+picture {
+	display:	block;
+}
+picture, figure img { 
+	height:		auto;
+	width:		100%;
+	text-align:	center;
+}
+figure picture {
+	display: inline-block;
+}
+figure img {
+	display:	inline-block;
+}
 
 input, textarea, legend, select {
 	font:			inherit;
 }
-
-textarea {
-	overflow:		auto;
-	line-height:		1.8em;
-	resize:			vertical;
-	min-height:		150px;
-}
-
 
 ul.thread {
 	list-style:		none;
@@ -262,6 +288,17 @@ input, select, .btn, .btnw, .btnr {
 	height:			32px;
 }
 
+textarea {
+	overflow:		auto;
+	resize:			vertical;
+}
+
+textarea.full {
+	min-height:		200px;
+	line-height:		1.5em;
+}
+
+
 input[type='submit'], input[type='button'], 
 .btn, .btnw, .btnr, a.btn, a.btnw, a.btnr {
 	height:			32px;
@@ -323,7 +360,7 @@ input.full, textarea.full, #html {
 	padding-right:		.3em;
 	margin:			0;
 }
-input.full, textarea.full, #html {
+input.full, textarea.full, textarea.abs, #html {
 	display:		block;
 	width:			100%;
 }
@@ -337,8 +374,9 @@ input[type='text'].full {
 	color:			#777;
 	border-bottom:		1px solid #cdcdcd;
 }
+
 #html {
-	min-height:		171px;
+	min-height:		200px;
 	line-height:		1.5em;
 }
 
@@ -449,12 +487,13 @@ nav.main {
 	z-index:		99;
 	border-bottom: 2px solid #283744;
 }
-nav.main, nav.main ul {
+/*
+nav.main {
 	-webkit-transition:	all .6s ease;
 	-moz-transition:	all .6s ease;
 	-o-transition:		all .6s ease;
 	transition:		all .6s ease;
-}
+}*/
 nav.main ul {
 	padding:		0;
 	margin:			0 auto;
@@ -757,8 +796,19 @@ input[type='range']::-moz-range-progress {
 	text-align:		center;
 	margin-bottom:		10px;
 }
-.drop:hover {
+.dropped {
+	text-align:		center;
+}
+.drop:hover, .drophover {
 	border-style:		solid;
+}
+.dropped figure {
+	display:		inline-block;
+}
+.dropped progress {
+	display:		block;
+	width:			90%;
+	margin:			1em auto;
 }
 .upload {
 	position:		relative;
