@@ -47,7 +47,7 @@ class Register extends Handlers\Handler {
 		);
 	}
 	
-	private function save( $data ) 
+	private function save( $data ) {
 		$post			= 
 		$this->findUser( $data['username'], $data['email'] );
 		
