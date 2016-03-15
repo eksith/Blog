@@ -60,6 +60,11 @@ class Sensor {
 	 */
 	private $ip;
 	
+	/**
+	 * @var array Firewall processing messages
+	 */
+	private $msg	= array();
+	
 	const HOST_SIZE		= 255;
 	const HOST_CHUNKS	= 8;
 	const HOST_RX		= 
@@ -70,6 +75,7 @@ class Sensor {
 		Core\Config $config,
 		Core\Crypto $crypto
 	) {
+		$this->addMsg( 'Firewall initializing' );
 		$this->request	= $request;
 		$this->config	= $config;
 		$this->crypto	= $crypto;
@@ -84,12 +90,20 @@ class Sensor {
 		Models\Model::setCrypto( $crypto );
 		
 		$this->sessionCheck();
+		
+		$this->addMsg( 'Firewall initialized' );
+	}
+	
+	public function __destruct() {
+		# Debugging
+		# var_dump( $this->msg );
 	}
 	
 	/**
 	 * Run firewall
 	 */
 	public function run() {
+		$this->addMsg( 'Firewall run start' );
 		$this->checkPort();
 		$this->accept( $this->methods );
 		$this->requestScan();
@@ -106,6 +120,7 @@ class Sensor {
 			$this->uaScan();
 			
 			$_SESSION[$hash]	= true;
+			$this->addMsg( 'Session hash set' );
 		}
 		
 		# Put and Post require extra scrutiny
@@ -113,6 +128,7 @@ class Sensor {
 		if ( in_array( $this->method, $search ) ) {
 			$this->bodyScan();
 		}
+		$this->addMsg( 'Firewall run end' );
 	}
 	
 	/**
@@ -125,6 +141,16 @@ class Sensor {
 		}
 		$this->ports[]	= $port;
 		$this->ports	= array_unique( $this->ports );
+		$this->addMsg( 'Port added ' . $port );
+	}
+	
+	public function getMessages() {
+		return $this->msg;
+	}
+	
+	private function addMsg( $msg ) {
+		$this->msg[]	= $msg . ' ' .
+			round( microtime( true ) - START, 8 );
 	}
 	
 	/**
@@ -142,6 +168,7 @@ class Sensor {
 				}
 			}
 		}
+		$this->addMsg( 'Global injection passed' );
 	}
 	
 	/**
@@ -172,6 +199,8 @@ class Sensor {
 				}
 			}
 		);
+		
+		$this->addMsg( 'Request scan passed' );
 	}
 	
 	/**
@@ -188,6 +217,8 @@ class Sensor {
 				}
 			}
 		);
+		
+		$this->addMsg( 'User agent scan passed' );
 	}
 	
 	/**
@@ -197,6 +228,7 @@ class Sensor {
 		# TODO
 		# $body	= $this->request->getBody();
 		
+		$this->addMsg( 'Body scan complete' );
 	}
 	
 	/**
@@ -207,6 +239,7 @@ class Sensor {
 		# Running locally? Skip IP check
 		if ( $this->getSetting( 'firewall_local' ) ) {
 			$ip	= '127.0.0.1';
+			$this->addMsg( 'Firewall running locally' );
 		} else {
 			if ( !$this->ip->validateIP( $ip ) ) {
 				$this->end( 'Denied IP' );
@@ -247,6 +280,8 @@ class Sensor {
 				}
 			}
 		);
+		
+		$this->addMsg( 'IP scan passed' );
 	}
 	
 	/**
@@ -318,10 +353,29 @@ class Sensor {
 		}
 		
 		if ( preg_match( self::HOST_RX, $host ) ) {
+			$this->addMsg( 'Host validation passed' );
 			return true;
 		}
 		
 		return false;
+	}
+	
+	/**
+	 * #TODO
+	 */
+	private function checkReferrer() {
+		if ( isset( $_SERVER['HTTP_REFERER'] ) ) {
+			$uri	= 
+			Messaging\Uri::cleanUrl( 
+				$_SERVER['HTTP_REFERER'] 
+			);
+		}
+		if ( empty( $uri ) ) {
+			return;
+		}
+		
+		$path	= parse_url( $uri );
+		$this->addMsg( 'Referrer check pending' );
 	}
 	
 	/**
@@ -396,6 +450,7 @@ class Sensor {
 		if ( !in_array( $port, $this->ports ) ) {
 			$this->end( 'Invalid port' );
 		}
+		$this->addMsg( 'Port check passed' );
 	}
 	
 	# https://eksith.wordpress.com/2013/11/04/firewall-php/
@@ -431,6 +486,7 @@ class Sensor {
 		) {
 			$this->end( 'Invalid user agent' );
 		}
+		$this->addMsg( 'Header check passed' );
 	}
 	
 	/**
@@ -441,9 +497,11 @@ class Sensor {
 		$request = $this->method;
 		if ( is_array( $methods ) ) { 
 			if ( in_array( $request, $methods ) ) {
+				$this->addMsg( 'Method check passed' );
 				return;
 			}
 		} elseif ( $request == $methods ) { 
+			$this->addMsg( 'Method check passed' );
 			return;
 		}
 		$this->end( 'Method rejected' );
@@ -487,17 +545,21 @@ class Sensor {
 			\session_status() === \PHP_SESSION_ACTIVE && 
 			!$reset 
 		) {
+			$this->addMsg( 'Session already started' );
 			return;
 		}
 		
 		if ( \session_status() != \PHP_SESSION_ACTIVE ) {
 			session_start();
+			$this->addMsg( 'Session started' );
 		}
 		if ( $reset ) {
 			\session_regenerate_id( true );
 			foreach ( array_keys( $_SESSION ) as $k ) {
 				unset( $_SESSION[$k] );
 			}
+			
+			$this->addMsg( 'Session reset' );
 		}
 	}
 	
@@ -517,6 +579,7 @@ class Sensor {
 		) {
 			\session_regenerate_id( true );
 			$this->sessionCanary();
+			$this->addMsg( 'Session regenerated' );
 		}
 	}
 	
@@ -534,6 +597,7 @@ class Sensor {
 			'exp'	=> time() + $time,
 			'visit'	=> bin2hex( $bytes )
 		);
+		$this->addMsg( 'Session canary set' );
 	}
 	
 	/**
