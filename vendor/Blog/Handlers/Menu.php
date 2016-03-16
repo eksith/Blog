@@ -55,7 +55,21 @@ class Menu extends Handler {
 					'main_menu', 
 					$this->publicMenu( 'Home' );
 				);
+				
+				$event->add(
+					'side_menu'
+					$this->sidebar( $event );
+				);
 		}
+	}
+	
+	private function sidebar( Events\Event $event ) {
+		$side = $event->get( 'sidebar' );
+		if ( empty( $side ) ) {
+			return array();
+		}
+		
+		return $this->build( $side, '' );
 	}
 	
 	private function publicMenu( $name ) {
