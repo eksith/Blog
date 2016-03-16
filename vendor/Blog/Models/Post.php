@@ -153,14 +153,17 @@ class Post extends Model {
 				return 
 				isset( $this->taxonomy[$name] ) ?
 					$this->taxonomy[$name] : array();
+			case 'date':
+				return 
+				isset( $this->published_at ) ? 
+					parent::niceDate( $this->published_at ) : 
+					parent::niceDate( \PHP_INT_MAX );
 				
 			case 'date_u':
-				return
+				return 
 				isset( $this->published_at ) ? 
-					$this->myTime( strtotime(
-						$this->published_at
-					) ) : 
-					$this->myTime( \PHP_INT_MAX );
+					parent::utc( $this->published_at ) : 
+					parent::utc( \PHP_INT_MAX );
 		}
 		
 		return null;
