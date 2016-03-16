@@ -38,7 +38,7 @@ class Handler extends Events\Listener {
 	 * @param bool $flush If true, prevents any content from being 
 	 * 		sent to the user
 	 */
-	protected function finish( $flush = true ) {
+	protected function finish( $flush = true, $msg = '' ) {
 		if ( $flush ) {
 			if ( function_exists( 
 				'fastcgi_finish_request' 
@@ -52,7 +52,7 @@ class Handler extends Events\Listener {
 			ob_start();
 			ob_end_clean(); 
 		}
-		exit();
+		die( $msg );
 	}
 	
 	/**
