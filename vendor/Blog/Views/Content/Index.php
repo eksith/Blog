@@ -7,16 +7,6 @@ use Blog\Views;
 
 class Index extends Views\View {
 	
-	protected $post_map = 
-	array(
-		'post_author'	=> 'author',
-		'post_title'	=> 'title',
-		'date_u'	=> 'pub',
-		'date'		=> 'published_at',
-		'post_id'	=> 'id',
-		'post_tags'	=> 'tags'
-	);
-	
 	public function __construct( Events\Dispatcher $dispatcher ) {
 		parent::__construct( $dispatcher );
 		$this->setTheme( $this->getSetting( 'theme_default' ) );
@@ -33,25 +23,27 @@ class Index extends Views\View {
 		
 		$vars		= 
 		array(
-			'heading'	=> $title . ' - ' $tagline,
+			'heading'	=> $title . ' - ' . $tagline,
 			'page_title'	=> $title,
 			'host_uri'	=> $uri,
 			'theme'		=> $this->getThemeDisplay()
 		);
 		
-		# Test
-		$test		= new Models\Post();
-		$test->id	= 12;
-		$test->title	= 'test title';
-		$test->author	= 'author';
+		$posts		= $event->get( 'posts' );
+		$parsed		= array();
 		
-		$posts		= array( $test );
-		$parsed		= $this->mapObjToPlace( 
-					$posts, $this->post_map
-				);
+		foreach ( $posts as $post ) {
+			$parsed[$post->id] = array();
+			foreach( $this->post_map as $k => $v ) {
+				if ( is_array( $post->{$v} ) ) {
+					continue;
+				}
+				$parsed[$post->id][$k] = $post->{$v};
+			}
+		}
 		
-		$this->addState( 'posts', $posts );
-		echo $this->sendView( 'forum.html', $conds, $vars );
+		$this->addState( 'posts', $parsed );
+		echo $this->sendView( 'index.html', $conds, $vars );
 	}
 	
 	public function archive( Events\Event $event ) {
