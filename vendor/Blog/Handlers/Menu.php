@@ -73,10 +73,8 @@ class Menu extends Handler {
 	}
 	
 	private function publicMenu( $name ) {
-		return array(
-			'Home'		=> '/',
-			'Account'	=> '/account'
-		);
+		$paths	= $this->getSetting( 'main_navigation' );
+		
 		return $this->build( $paths, $name );
 	}
 	
