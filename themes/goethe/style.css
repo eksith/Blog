@@ -1,0 +1,198 @@
+@import url( normalize.css );
+@import url(https://fonts.googleapis.com/css?family=Merriweather);
+@import url(https://fonts.googleapis.com/css?family=Bitter);
+body {
+	font:			400 1em 'Merriweather', Georgia, serif;
+	font-smoothing:		antialiased;
+	line-height:		2em;
+	background:		#fcfce9;
+	color:			#444;
+}
+h1, h2, h3, h4, h5, h6, header p {
+	line-height:		1.6em;
+	margin:			0;
+}
+h1, h2, h3, h4, h5, h6 {
+	font-family:		'Bitter', Georgia, serif;
+}
+h1, h2, h3, h4 {
+	font-weight:		400;
+}
+h1 {
+	font-size:		1.6em;
+}
+article header h1 {
+	font-size:		2.2em;
+}
+h2 {
+	font-size:		1.8em;
+}
+h3 {
+	font-size:		1.6em;
+}
+h4 {
+	font-size:		1.4em;
+}
+h5 {
+	font-size:		1.2em;
+}
+h6 {
+	font-size:		1em;
+}
+header, footer, .post, .block {
+	max-width:		640px;
+	margin:			0 auto;
+}
+header {
+	margin:			2em auto 1em auto;
+	text-align:		center;
+}
+footer {
+	margin:			1em auto;
+}
+.post blockquote {
+	width:			90%;
+	max-width:		600px;
+	margin:			2em auto;
+	font-style:		italic;
+	color:			#666;
+}
+.post blockquote p {
+	width:			100%;
+}
+.post header {
+	border-bottom:		1px solid #c17753;
+	padding:		0 0 .5em 0;
+}
+.comment {
+	border-bottom:		1px solid #c17753;
+}
+.comment:last-child {
+	border:			0;
+}
+img.full {
+	display:		block;
+	height:			auto;
+	width:			100%;
+	margin-left:		auto;
+	margin-right:		auto;
+}
+a {
+	color:			#b05f3c;
+	text-decoration:	underline;
+	
+}
+h1 a, h2 a, h3 a, h4 a {
+	font-weight:		400;
+	color:			#444;
+}
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a, .mark a {
+	text-decoration: 	none;
+	text-transform:		none;
+}
+nav ul {
+	list-style:		none;
+	text-align:		center;
+	margin:			.5em 0;
+}
+
+nav ul li {
+	display: inline-block;
+}
+nav ul li {
+	border: 		1px solid #c17753;
+	border-width:		0 1px 0 0;
+	margin:			0;
+	padding:		0;
+	line-height:		1.3em;
+}
+nav ul li:last-child {
+	border:			0;
+}
+nav ul li a {
+	padding:		0 1em;
+	text-decoration:	none;
+	font-weight:		600;
+}
+.mark {
+	text-align:		center;
+	display:		block;
+	clear:			both;
+}
+time.mark {
+	font:			500 .78em 'Bitter', Georgia, serif;
+	text-transform:		uppercase;
+	letter-spacing:		.03em;
+	color:			#b05f3c;
+}
+.mark:before, .mark:after, legend:before, legend:after {
+	content: 		' ';
+	width:			30%;
+	display:		block;
+	vertical-align:		middle;
+	padding:		.5em 0 0 0;
+	border-bottom:		1px solid #c17753;
+}
+.mark:before, legend:before {
+	float:			left;
+}
+.mark:after, legend:after {
+	float:			right;
+}
+h5.mark:before, h5.mark:after, legend:before, legend:after {
+	border-color:		#555;
+	padding:		.7em 0 0 0;
+}
+form, fieldset {
+	padding:		0;
+	margin:			0;
+	border:			0;
+}
+form p {
+}
+legend {
+	display:		block;
+	width:			100%;
+	font:			600 1.2em 'Bitter', Georgia, serif;
+	text-align:		center;
+	margin:			0 auto;
+}
+input, textarea {
+	font:			inherit;
+	line-height:		1.4em;
+	padding:		.5em;
+	color:			#555;
+}
+input[type='text'], input[type='password'], input[type='email'], textarea {
+	background:		#fff;
+	border:			1px solid #555;
+}
+input[type='submit'], input[type='button'], .btn {
+	font:			600 1.1em 'Bitter', Georgia, serif;
+	color:			#444;
+	border:			0;
+	padding:		0;
+	background:		transparent;
+	cursor:			pointer;
+}
+textarea {
+	width:			100%;
+}
+@media screen and ( max-width: 640px ) {
+	article, .post, .block {
+		margin:			0 1em;
+	}
+	.mark:before, .mark:after, legend:before, legend:after {
+		width:			20%;
+	}
+}
+@media screen and ( max-width: 400px ) {
+	input[type='text'], input[type='password'], input[type='email'], 
+	textarea {
+		display:		block;
+		width:			100%;
+	}
+	.mark:before, .mark:after, legend:before, legend:after {
+		display:		none;
+	}
+}
