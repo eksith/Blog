@@ -504,6 +504,31 @@ class Model {
 	}
 	
 	/**
+	 * Convert text or int form datetime stamp into a UTC string
+	 * 
+	 * @param string|int $time Unix timestamp
+	 * @return string 'Year-month-dateTHour:minute:second' format
+	 */
+	public static function utc( $time ) {
+		if ( is_int( $time ) ) {
+			return gmdate( 'y-m-dTH:i:s', $time );
+		}
+		return gmdate( 'y-m-dTH:i:s', strtotime( $time ) );
+	}
+	
+	/**
+	 * Convert text timestamp into a friendly display format given 
+	 * in the app configuration
+	 * 
+	 * @param string $time Datetime stamp
+	 * @return string Configuration specified format
+	 */
+	public static function niceDate( $time ) {
+		$fmt = static::getSetting( 'date_format' );
+		return gmdate( $fmt, strtotime( $time ) );
+	}
+	
+	/**
 	 * Extract the username and password from the DSN and rebuild
 	 */
 	private static function dsn(
