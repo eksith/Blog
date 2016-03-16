@@ -11,35 +11,85 @@ class Menu extends Handler {
 	
 	public function handlEvent( Events\Event $event ) {
 		switch( $event->getName() ) {
-			case '':
+			case 'creatingPost':
 				$event->add( 
 					'main_menu', 
-					$this->manageMenu()
+					$this->manageMenu( 'New' )
 				);
 				break;
+			
+			case 'viewPosts':
+			case 'editingPost':
+			case 'deletingPost':
+				$event->add( 
+					'main_menu', 
+					$this->manageMenu( 'Posts' )
+				);
+				break;
+				
+			case 'profileView':
+				$event->add( 
+					'main_menu', 
+					$this->manageMenu( 'Profile' )
+				);
+				break;
+				
+			case 'userView':
+			case 'deleteView':
+				$event->add( 
+					'main_menu', 
+					$this->manageMenu( 'Users' )
+				);
+				break;
+				
+			case 'loggingIn':
+			case 'registering':
+				$event->add( 
+					'main_menu', 
+					$this->manageMenu( 'Account' )
+				);
+				break;
+			
 			default:
 				$event->add( 
 					'main_menu', 
-					$this->publicMenu()
+					$this->publicMenu( 'Home' );
 				);
 		}
 	}
 	
-	private function publicMenu( Events\Event $event ) {
+	private function publicMenu( $name ) {
 		return array(
-			'Home'		=> array( '/', true ),
-			'Account'	=> array( '/account', false )
+			'Home'		=> '/',
+			'Account'	=> '/account'
 		);
+		return $this->build( $paths, $name );
 	}
 	
-	private function manageMenu( Events\Event $event ) {
-		return array(
-			'Home'		=> array( '/', false ),
-			'New'		=> array( '/new', true ),
-			'Posts'		=> array( '/posts', false ),
-			'Users'		=> array( '/users', false ),
-			'Profile'	=> array( '/profile', false ),
-			'Account'	=> array( '/account', false )
+	private function manageMenu( $name ) {
+		$paths = 
+		array(
+			'Home'		=> '/',
+			'New'		=> '/new',
+			'Posts'		=> '/posts',
+			'Users'		=> '/users',
+			'Profile'	=> '/profile',
+			'Account'	=> '/account'
 		);
+		return $this->build( $paths, $name );
+	}
+	
+	private function build( $paths, $name ) {
+		
+		$menu = array();
+		
+		foreach ( $paths as $k => $v ) {
+			$menu[$k] = 
+			array( 
+				$v, ( $name == $k ) ? true : false 
+			);
+		}
+		
+		return $menu;
 	}
 }
