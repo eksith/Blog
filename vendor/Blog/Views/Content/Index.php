@@ -12,9 +12,7 @@ class Index extends Views\View {
 		$this->setTheme( $this->getSetting( 'theme_default' ) );
 	}
 	
-	public function index( Events\Event $event ) {
-		$conds		= array();
-		
+	public function index( Events\Event $event ) {		
 		$title		= $this->getSetting( 'blog_name' );
 		$tagline	= $this->getSetting( 'blog_tagline' );
 		$uri		= $this->getRequest()
@@ -29,8 +27,13 @@ class Index extends Views\View {
 			'theme'		=> $this->getThemeDisplay()
 		);
 		
-		$posts		= $event->get( 'posts' );
 		$parsed		= array();
+		$posts		= $event->get( 'posts' );
+		$conds		= 
+		array(
+			'post_count'	= count( $posts )
+		);
+		
 		
 		foreach ( $posts as $post ) {
 			$parsed[$post->id] = array();
@@ -42,6 +45,7 @@ class Index extends Views\View {
 			}
 		}
 		
+		$this->menuBuilder( $event, $conds );
 		$this->addState( 'posts', $parsed );
 		echo $this->sendView( 'index.html', $conds, $vars );
 	}
