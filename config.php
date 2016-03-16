@@ -3,8 +3,9 @@
 define( 'PATH',			\realpath( \dirname( __FILE__ ) ) . '/' );
 define( 'PKGS',			PATH . 'vendor/' );
 
-// Use the |PATH| placeholder if the relevant folder/resource 
-// is relative to this config file
+# Use the |PATH| placeholder if the relevant folder/resource 
+# is relative to this config file. It's recommended that the databases 
+# and upload directories be placed outside the web root
 define( 'CONFIG', <<<JSON
 {
 	"version"		: "0.01",
@@ -37,7 +38,7 @@ define( 'CONFIG', <<<JSON
 	"firewall_ip"		: "|PATH|data\/ip.ini",
 	"firewall_bots"		: "|PATH|data\/bots.ini",
 	"firewall_hosts"	: true,
-	"firewall_local"	: false,
+	"firewall_local"	: true,
 	
 	"list_per_page"		: 20,
 	"posts_per_page"	: 15,
@@ -101,13 +102,6 @@ define( 'CONFIG', <<<JSON
 }
 JSON
 );
-
-
-\set_include_path( \get_include_path() . PATH_SEPARATOR . PKGS );
-\spl_autoload_extensions( '.php' );
-\spl_autoload_register( function( $class ) {
-	\spl_autoload( str_replace( "\\", "/", $class ) );
-});
 
 
 /*
