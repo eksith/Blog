@@ -38,7 +38,7 @@ define( 'CONFIG', <<<JSON
 	"firewall_ip"		: "|PATH|data\/ip.ini",
 	"firewall_bots"		: "|PATH|data\/bots.ini",
 	"firewall_hosts"	: true,
-	"firewall_local"	: true,
+	"firewall_local"	: false,
 	
 	"list_per_page"		: 20,
 	"posts_per_page"	: 15,
