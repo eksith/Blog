@@ -23,7 +23,7 @@ class Locale extends Views\View {
 			$name = $this->processLocale( $event );
 			$event->set( 'locale', $name );
 		}
-		
+		$this->setLang( $name, $event );
 	}
 	
 	private function processLocale( Events\Event $event ) {
@@ -39,8 +39,11 @@ class Locale extends Views\View {
 	}
 	
 	private function setLang( $name, Events\Event $event ) {
-		$class	= $this->map[$name];
-		$locale = new $class( $event );
+		$vars		= $this->map[$name];
+		$lang		= $this->getSetting( 'language_files' );
+		$this->defs	= $this->loadJson( $lang . $vars . '.json' );
+		
+		$event->set( 'lang', $this );
 	}
 	
 	public function term() {
