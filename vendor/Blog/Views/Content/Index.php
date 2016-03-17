@@ -1,7 +1,6 @@
 <?php
 
 namespace Blog\Views\Content;
-use Blog\Models;
 use Blog\Events;
 use Blog\Views;
 
@@ -21,7 +20,7 @@ class Index extends Views\View {
 		
 		$vars		= 
 		array(
-			'heading'	=> $title . ' - ' . $tagline,
+			'heading'	=> $tagline,
 			'page_title'	=> $title,
 			'host_uri'	=> $uri,
 			'theme'		=> $this->getThemeDisplay()
@@ -31,7 +30,7 @@ class Index extends Views\View {
 		$posts		= $event->get( 'posts' );
 		$conds		= 
 		array(
-			'post_count'	= count( $posts )
+			'post_count'	=> count( $posts )
 		);
 		
 		
