@@ -16,10 +16,13 @@ class Manage extends Views\View {
 	
 	public function loggingIn( Events\Event $event ) {
 		$cond	= array();
+		$lang	= $event->get( 'lang' );
 		$vars	= array(
 			'page_title'	=> 'Account login',
 			'page_heading'	=> 'Blog',
-			'theme'		=> $this->getThemeDisplay()
+			'theme'		=> $this->getThemeDisplay(),
+			'copyright'	=> 
+				$lang->term( 'copyright', date( 'Y' ) )
 		);
 		
 		$vars	= array_merge( $vars, $event->get( 'login_form' ) );
@@ -33,10 +36,13 @@ class Manage extends Views\View {
 	
 	public function profileView( Events\Event $event ) {
 		$cond	= array();
+		$lang	= $event->get( 'lang' );
 		$vars	= array(
 			'page_title'	=> 'Profile',
 			'page_heading'	=> 'Blog',
-			'theme'		=> $this->getThemeDisplay()
+			'theme'		=> $this->getThemeDisplay(),
+			'copyright'	=> 
+				$lang->term( 'copyright', date( 'Y' ) )
 		);
 		$vars	= array_merge( $vars, $event->get( 'profile_form' ) );
 		echo $this->sendView( 'manage_profile.html', $cond, $vars );
