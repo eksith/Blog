@@ -26,6 +26,13 @@ class Post extends Model {
 	public $plain;
 	
 	/**
+	 * URL friendly page slug
+	 * 
+	 * @var string
+	 */
+	public $slug;
+	
+	/**
 	 * Content exactly as entered
 	 * 
 	 * @var string
@@ -220,7 +227,7 @@ class Post extends Model {
 		$params	= array();
 		$sql	= 
 		"SELECT posts.id AS id, posts.title AS title, 
-		
+		posts.slug AS slug,
 		posts.root_id AS root_id, posts.parent_id AS parent_id, 
 		posts.status AS status, posts.created_at AS created_at, 
 		posts.updated_at AS updated_at,	
@@ -260,7 +267,7 @@ class Post extends Model {
 			$this, 
 			array( 
 				'title', 'summary', 'raw', 'plain', 
-				'body', 'published_at', 'status' 
+				'body', 'slug', 'published_at', 'status' 
 			) 
 		);
 		
