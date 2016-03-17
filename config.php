@@ -18,6 +18,12 @@ define( 'CONFIG', <<<JSON
 	"cache_store"		: "sqlite:data\/cache.sqlite",
 	"firewall_store"	: "sqlite:data\/firewall.sqlite",
 	
+	"main_navigation"	: {
+					"Home"		: "\/",
+					"Archive"	: "\/archive",
+					"Account"	: "\/manage/login"
+				},
+	
 	"media_path"		: "|PATH|data\/media\/",
 	"archive_path"		: "|PATH|data\/archive\/",
 	"compiled_tpl_path"	: "|PATH|data\/templates\/",
@@ -38,13 +44,15 @@ define( 'CONFIG', <<<JSON
 	"firewall_ip"		: "|PATH|data\/ip.ini",
 	"firewall_bots"		: "|PATH|data\/bots.ini",
 	"firewall_hosts"	: true,
-	"firewall_local"	: false,
+	"firewall_local"	: true,
 	
 	"list_per_page"		: 20,
 	"posts_per_page"	: 15,
 	"data_timeout"		: 10,
 	
 	"date_format"		: "M, d h:i",
+	
+	"language_files"	: "|PATH|vendor\/Blog\/Language\/",
 	
 	"cache_hash"		: "tiger192,4",
 	"cache_time"		: 3600,
