@@ -130,6 +130,9 @@ class View extends Handlers\Handler {
 	 * Get any tags by name in the specified node
 	 */
 	protected function getTags( $tag, &$node ) {
+		if ( null == $node ) {
+			return null;
+		}
 		return $node->getElementsByTagName( $tag );
 	}
 	
@@ -204,6 +207,19 @@ class View extends Handlers\Handler {
 		$node->parentNode->replaceChild( $elem, $node );
 	}
 	
+	/**
+	 * Replace a DOMNode with its contents
+	 */
+	protected function swapNode( $node, $dom ) {
+		$html	= $this->innerHTML( $node );
+		$d	= $this->newDom();
+		$this->loadDom( $html, $d );
+			
+		$cn	= $d->firstChild;
+		$cn	= $dom->importNode( $cn, true );
+		$node->parentNode->replaceChild( $cn, $node );
+	}
+	
 	protected function buildNodes( $node, \DOMNode $out ) {
 		if ( !$node->hasChildNodes() ) { return; }
 		$children	= $node->childNodes;
@@ -248,33 +264,6 @@ class View extends Handlers\Handler {
 	}
 	
 	/**
-	 * Prepares loop. 
-	 * Removes/displays <empty> tag depending on whether 
-	 * content is available
-	 */
-	protected function formatLoop( &$node, &$dom ) {
-		$items		= $this->getData( 
-					$node->getAttribute( 'rel' ) 
-				);
-		
-		if ( count( $items ) ) { 
-			// We have items. Remove the <empty> tags
-			$this->scrubTag( 'empty', $node );
-		} else {
-			return $this->fromNodes( 'empty', $node );
-		}
-		
-		$html		= '';
-		$tpl		= $this->innerHTML( $node );
-		
-		// TODO: Move this outside the loop
-		foreach( $items as $i ) {
-			$html .= $this->renderXml( $tpl, $i );
-		}
-		return $html;
-	}
-	
-	/**
 	 * Delete all tags by the given name in the specified node
 	 */
 	protected function scrubTag( $tag, &$node ) {
@@ -282,6 +271,24 @@ class View extends Handlers\Handler {
 		for ( $i = 0; $i < $em->length; $i++ ) {
 			$e = $em->item( $i );
 			$e->parentNode->removeChild( $e );
+		}
+	}
+	
+	/**
+	 * Delete DOMNode
+	 */
+	protected function deleteNode( $node ) {
+		$this->deleteNodes( $node );
+		$node->parentNode->removeChild( $node );
+	}
+	
+	/**
+	 * Delete child DOMNode
+	 */
+	protected function deleteNodes( $node ) {
+		while ( isset( $node->firstChild ) ) {
+			$this->deleteNodes( $node->firstChild );
+			$node->removeChild( $node->firstChild );
 		}
 	}
 	
@@ -319,24 +326,13 @@ class View extends Handlers\Handler {
 		return false;
 	}
 	
-	/**
-	 * Match the conditions of a 'rel' attribute and move out the 
-	 * contents of the node and replace it
-	 */
-	protected function matchSwap( $conds, $node, &$dom ) {
-		if ( !$node->hasAttribute( 'rel' ) ) {
-			return false;
-		}
-		
+	protected function processIfs( $conds, $node, &$dom ) {
 		$r = $node->getAttribute( 'rel' );
-		
 		if ( $this->matchCondition( $r, $conds ) ) {
-			$this->swapHTML( 
-				$this->innerHTML( $node ), $node, $dom 
-			);
-			return true;
+			$this->swapNode( $node, $dom );
+			return;
 		}
-		return false;
+		$node->parentNode->removeChild( $node );
 	}
 	
 	/**
@@ -344,14 +340,19 @@ class View extends Handlers\Handler {
 	 * If the condition is true, replace the <if> tag with 
 	 * the content inside it. Remove the rest if false.
 	 */
-	protected function parseConditions( $conds, &$dom ) {
+	protected function parseIfs( $conds, $dom ) {
 		$ifs		= $dom->getElementsByTagName( 'if' );
+		if ( empty( $ifs ) ) {
+			return;
+		}
 		foreach ( $ifs as $node ) {
-			if ( $this->matchSwap( $conds, $node, $dom ) ) {
+			if ( !$node->hasAttribute( 'rel' ) ) {
 				continue;
 			}
-			$node->parentNode->removeChild( $node );
+			
+			$this->processIfs( $conds, $node, $dom );
 		}
+		
 		$this->loadIncludes( $conds, $dom );
 	}
 	
@@ -388,11 +389,92 @@ class View extends Handlers\Handler {
 		&$dom 
 	) {
 		$loops		= $dom->getElementsByTagName( 'each' );
-		foreach( $loops as $node ) {
-			$html	= $this->formatLoop( $node, $dom );
-			$this->swapHTML( $html, $node, $dom );
-		}
+		$this->loops( $loops, $conds, $dom );
 		$this->loadIncludes( $conds, $dom );
+	}
+	
+	/**
+	 * Get items to be parsed with matching rel attribute
+	 */
+	protected function getItems( $node ) {
+		if ( !$node->hasAttribute( 'rel' ) ) {
+			return null;
+		}
+		return $this->getData( $node->getAttribute( 'rel' ) );
+	}
+	
+	/**
+	 * Format an item according to given templates
+	 */
+	protected function formatItems( 
+		$items, 
+		$node,
+		$conds, 
+		&$dom 
+	) {	
+		$tpl		= $this->innerHTML( $node );
+		$html		= '';
+		
+		foreach( $items as $i ) {
+			$html .= $this->render( $tpl, $i );
+		}
+		$this->swapHTML( $html, $node, $dom );
+		
+		$seps = $node->getElementsByTagName( 'separator' );
+		if ( count( $seps ) ) {
+			$last = $seps->item(0);
+			$this->deleteNodes( $last );
+		}
+	}
+	
+	/**
+	 * Format an empty loop by replacing the content with the <empty>
+	 * tag HTML if available or remove the node altogether
+	 */
+	protected function emptyItem( $node, &$dom ) {
+		$tpl = $this->fromNodes( 'empty', $node );
+		if ( empty( $tpl ) ) {
+			$node->parentNode->removeChild( $node );
+		} else {
+			$this->swapNode( 
+				$node->getElementsByTagName( 'empty' )->item(0), 
+				$dom 
+			);
+		}
+	}
+	
+	/**
+	 * Prepares loop. 
+	 * Removes/displays <empty> tag depending on whether 
+	 * content is available
+	 */
+	protected function loops( 
+		$nodes,
+		&$conds, 
+		&$dom 
+	) {
+		foreach ( $nodes as $node ) {
+			if ( $node->hasAttribute( 'selected' ) ) {
+				$s = explode( 
+					',', 
+					$nav->getAttribute( 'selected' )
+				);
+				if ( !empty( $s ) ) {
+					
+				}
+			}
+			
+			$items	= $this->getItems( $node );
+			if ( empty( $items ) ) {
+				$this->emptyItem( $node, $dom );
+				continue;
+			} else {
+				$this->scrubTag( 'empty', $node );
+			}
+			$this->formatItems( 
+				$items, $node, $conds, $dom
+			);
+		}
 	}
 	
 	/**
@@ -408,6 +490,9 @@ class View extends Handlers\Handler {
 		}
 		
 		$files	= $this->getTags( 'include', $dom );
+		if ( empty( $files ) ) {
+			return;
+		}
 		foreach( $files as $f ) {
 			if ( $this->includeCheck() ) {
 				return;
@@ -422,7 +507,7 @@ class View extends Handlers\Handler {
 			$this->swapHTML( $data, $f, $dom );
 			
 			// Parse any new conditions after load
-			$this->parseConditions( $conds, $dom );
+			$this->parseIfs( $conds, $dom );
 			
 			// Parse any new loops
 			$this->parseLoops( $conds, $dom );
@@ -439,6 +524,37 @@ class View extends Handlers\Handler {
 			return true;
 		}
 		return false;
+	}
+	
+	/**
+	 * Create a new DOMDocument with settings appropriate for 
+	 * a template file
+	 */
+	protected function newDom() {
+		$dom				= new \DOMDocument();
+		$dom->preserveWhiteSpace	= false;
+		$dom->formatOutput		= false;
+		$dom->strictErrorChecking	= false;
+		$dom->validateOnParse		= false;
+		$dom->resolveExternals		= true;
+		
+		return $dom;
+	}
+	
+	/**
+	 * Load template HTML data into the given doc with default 
+	 * options to mitigate most formatting issues
+	 * 
+	 * @param DOMDocument $dom Template document to load HTML into
+	 * @param string $data HTML plain text
+	 */
+	protected function loadDom( $data, &$dom ) {
+		$dom->loadHTML( 
+			$data, 
+			\LIBXML_HTML_NOIMPLIED | \LIBXML_HTML_NODEFDTD | 
+			\LIBXML_NOERROR | \LIBXML_NOWARNING | 
+			\LIBXML_NOXMLDECL
+		);
 	}
 	
 	/**
@@ -462,23 +578,12 @@ class View extends Handlers\Handler {
 		$err				= 
 			\libxml_use_internal_errors( true );
 		
-		$dom				= new \DOMDocument();
-		$dom->preserveWhiteSpace	= false;
-		$dom->formatOutput		= false;
-		$dom->strictErrorChecking	= false;
-		$dom->validateOnParse		= false;
-		$dom->resolveExternals		= true;
+		$dom				= $this->newDom();
 		
-		$dom->loadHTML( 
-			$data, 
-			\LIBXML_HTML_NOIMPLIED | \LIBXML_HTML_NODEFDTD | 
-			\LIBXML_NOERROR | \LIBXML_NOWARNING | 
-			\LIBXML_NOXMLDECL
-		);
-		
+		$this->loadDom( $data, $dom );
 		
 		// Parse pre-include conditions
-		$this->parseConditions( $conds, $dom );
+		$this->parseIfs( $conds, $dom );
 		
 		#$this->loadIncludes( $conds, $dom );
 		
@@ -519,10 +624,11 @@ class View extends Handlers\Handler {
 	protected function loadFile( $name ) {
 		$name	= $this->getTheme() . $name;
 		if ( file_exists( $name ) ) {
+			
 			$data = file_get_contents( $name );
 			if ( false !== strpos( $data, '<?' ) ) {
 				$this->finish(
-					false
+					false,
 					'Server-side code detected in ' . 
 					'template file. Exiting.'
 				);
@@ -607,6 +713,23 @@ class View extends Handlers\Handler {
 			$conds['pagination']	= 'yes';
 			$this->addState( 'pagination', $pagination );
 		}
+	}
+	
+	/**
+	 * Get singular placeholders from language file
+	 */
+	protected function fromLang(
+		Events\Event $event,
+		array $defs
+	) {
+		$lang	= $event->get( 'lang' );
+		$vars	= array();
+		
+		foreach( $defs as $term ) {
+			$vars[$term] = $lang->term( $term );
+		}
+		
+		return $vars;
 	}
 	
 	protected function preamble() {
