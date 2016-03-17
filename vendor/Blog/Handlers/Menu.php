@@ -9,10 +9,10 @@ use Blog\Events;
  */
 class Menu extends Handler {
 	
-	public function handlEvent( Events\Event $event ) {
+	public function handleEvent( Events\Event $event ) {
 		switch( $event->getName() ) {
 			case 'creatingPost':
-				$event->add( 
+				$event->set( 
 					'main_menu', 
 					$this->manageMenu( 'New' )
 				);
@@ -21,14 +21,14 @@ class Menu extends Handler {
 			case 'viewPosts':
 			case 'editingPost':
 			case 'deletingPost':
-				$event->add( 
+				$event->set( 
 					'main_menu', 
 					$this->manageMenu( 'Posts' )
 				);
 				break;
 				
 			case 'profileView':
-				$event->add( 
+				$event->set( 
 					'main_menu', 
 					$this->manageMenu( 'Profile' )
 				);
@@ -36,7 +36,7 @@ class Menu extends Handler {
 				
 			case 'userView':
 			case 'deleteView':
-				$event->add( 
+				$event->set( 
 					'main_menu', 
 					$this->manageMenu( 'Users' )
 				);
@@ -44,21 +44,21 @@ class Menu extends Handler {
 				
 			case 'loggingIn':
 			case 'registering':
-				$event->add( 
+				$event->set( 
 					'main_menu', 
 					$this->manageMenu( 'Account' )
 				);
 				break;
 			
 			default:
-				$event->add( 
+				$event->set( 
 					'main_menu', 
-					$this->publicMenu( 'Home' );
+					$this->publicMenu( 'Home' )
 				);
 				
-				$event->add(
-					'side_menu'
-					$this->sidebar( $event );
+				$event->set(
+					'side_menu',
+					$this->sidebar( $event )
 				);
 		}
 	}
@@ -96,9 +96,12 @@ class Menu extends Handler {
 		$menu = array();
 		
 		foreach ( $paths as $k => $v ) {
-			$menu[$k] = 
-			array( 
-				$v, ( $name == $k ) ? true : false 
+			$sel		= ( $name == $k ) ? true : false;
+			$menu[$k]	= 
+			array(
+				'label'		=> $k,
+				'path'		=> $v,
+				'selected'	=> $sel
 			);
 		}
 		
