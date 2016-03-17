@@ -23,6 +23,25 @@ class Create extends Views\View {
 			'parent'	=> $parent,
 			'parent_title'	=> $title
 		);
+		
+		$lang	= array(
+			'place_title',
+			'place_body',
+			'place_summary',
+			'place_slug',
+			'place_pub',
+			'place_post',
+			'place_edit',
+			'up_drop',
+			'select_files',
+			'tab_source',
+			'tab_preview',
+			'tab_options',
+			'tab_abstract',
+			'tab_media'
+		);
+		
+		$vars	= array_merge( $vars, $this->fromLang( $event, $lang ) );
 		$event->set( 'create_form', $vars );
 	}
 }
