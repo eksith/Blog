@@ -37,11 +37,11 @@ class Edit extends ContentHandler {
 		}
 		
 		$post			= 
-		Models\Post::find(
+		Models\Post::find( array(
 			'search'	=> 'id',
-			'value'		=> $event->get( 'id' );
+			'value'		=> $event->get( 'id' ),
 			'fields'	=> 'raw,summary'
-		);
+		) );
 		
 		if ( $this->editorStatus( $post->user_id, $uid, $event ) ) {
 			$this->redirect( '/', 403 );
