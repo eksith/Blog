@@ -184,12 +184,13 @@ class Handler extends Events\Listener {
 	 */
 	protected function redirect( $url, $code = 200 ) {
 		if ( headers_sent() ) {
-			die();
+			$this->finish( false, 'Redirect error' );
 		}
 		
 		$base	= $this->getRequest()
 				->getUri()
 				->getRoot();
+		
 		$path	= ltrim( $url, '/\\' );
 		$status	= 
 		array( 200, 201, 202, 203, 204, 205, 300, 301, 302, 303, 
@@ -200,7 +201,29 @@ class Handler extends Events\Listener {
 		}
 		
 		header( "Location: $base/$path", true, $code );
-		die();
+		$this->finish();
+	}
+	
+	/**
+	 * Load a JSON file, process it and return as an associative array
+	 */
+	protected function loadJson( $file ) {
+		if ( file_exists( $file ) ) {
+			$data	= file_get_contents( $file );
+		} else {
+			$this->finish( false, 'Couldn\'t find JSON file' );
+		}
+		
+		if ( empty( $data ) ) {
+			$this->finish( false, 'JSON file empty' );
+		}
+		
+		$processed = json_decode( $data, true, 10 );
+		if ( empty( $processed ) ) {
+			$this->finish( false, 'Couldn\'t process JSON file' );
+		}
+		
+		return $processed;
 	}
 	
 	/**
