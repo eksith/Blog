@@ -1,0 +1,61 @@
+{
+	"new_post"		: "New post",
+	"place_title"		: "Title",
+	"place_body"		: "Body",
+	"place_slug"		: "path-to-post",
+	"place_pub"		: "publish date (now)",
+	"place_summary"		: "Abstract",
+	"place_post"		: "Post",
+	"place_edit"		: "Edit",
+	"place_delete"		: "Delete",
+	
+	"place_reply"		: "In reply to %s",
+	"place_rtitle"		: "RE : %s",
+	
+	"post_del_msg"		: "Are you sure you want to delete this post? <strong>This cannot be undone.<\/strong>",
+	"post_conf_del"		: "Confirm permanent deletion",
+	
+	"up_drop"		: "Drop files",
+	"select_files"		: "Select files",
+	
+	"edit_post"		: "Edit post",
+	"delete_post"		: "Delete post",
+	"tab_source"		: "source",
+	"tab_preview"		: "preview",
+	"tab_options"		: "options",
+	"tab_abstract"		: "abstract",
+	"tab_media"		: "media",
+	"func_upload"		: "Upload",
+	"func_drop"		: "Drop upload files",
+	
+	"anon_author"		: "Anonymous",
+	"author"		: "Author",
+	"user"			: "User",
+	
+	"cmt_options"		: {
+					"Allow comments"	: 0,
+					"Named comments"	: 1,
+					"No comments"		: 2
+				},
+	"cmt_selected"		: 0,
+	
+	
+	
+	"register"		: "Register",
+	"remember"		: "Remember me",
+	"login"			: "Login",
+	"password"		: "Password",
+	
+	"place_email"		: "email",
+	"place_bio"		: "bio",
+	"place_pass_btn"	: "Change",
+	
+	"delete_me"		: "Delete my account",
+	"delete_agree"		: "I agree this is permanent",
+	"delete_btn"		: "Delete",
+	
+	"next_page"		: "Next",
+	"prev_page"		: "Previous",
+	
+	"copyright"		: "Copyright &#169; %d. All rights reserved"
+}
