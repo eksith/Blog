@@ -191,6 +191,13 @@ class Sensor {
 					->getUri()
 					->getRawPath();
 		
+		if ( preg_match( 
+			'/[\x00-\x08\x0B\x0C\x0E-\x1F\x80-\x9F]/u', 
+			$uri 
+		) ) {
+			$this->end( 'Invalid URI' );
+		}
+		
 		$this->blacklist( 
 			'firewall_uri',
 			function( $u ) use ( $uri ) {
@@ -226,7 +233,16 @@ class Sensor {
 	 */
 	private function bodyScan() {
 		# TODO
-		# $body	= $this->request->getBody();
+		$body	= $this->request->getBody();
+		
+		$this->blacklist( 
+			'firewall_bots',
+			function( $u ) use ( $body ) {
+				if ( false !== stripos( $body, $u ) ) {
+					$this->end( 'Invalid content' );
+				}
+			}
+		);
 		
 		$this->addMsg( 'Body scan complete' );
 	}
