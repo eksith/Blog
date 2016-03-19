@@ -4,7 +4,7 @@ namespace Blog\Core;
 use Blog\Messaging;
 use Blog\Events;
 
-class Router {
+class Router extends Events\Pluggable {
 	
 	private $request;
 	private $sender;
@@ -23,13 +23,25 @@ class Router {
 		if ( !isset( self::$routes[$verb] ) ) {
 			self::$routes[$verb] = array();
 		}
-		self::$routes[$verb][$this->cleanRoute( $path )] = 
+		static::$routes[$verb][$this->cleanRoute( $path )] = 
 			$route;
+		
+		$this->hook( 
+			'RouteAdded', 
+			$this, 
+			array( static::$routes ) 
+		);
 	}
 	
 	public function route( array $markers ) {
+		$this->hook( 'Routing', $this, static::$routes );
+		
 		$verb	= strtolower( $this->request->getMethod() );
 		if ( !isset( self::$routes[$verb] ) ) {
+			$this->hook( 
+				'RouteVerbMissing', 
+				$this, 
+				array( static::$routes, $verb, $markers );
 			return;
 		}
 		
@@ -45,7 +57,15 @@ class Router {
 				$found = true;
 				$this->send( $params, $route, $handler );
 			}
-		}		
+		}
+		
+		if ( !$found ) {
+			$this->hook( 
+				'RouteNotFound', 
+				$this, 
+				array( $route, $params )
+			);
+		}
 	}
 	
 	private function send( $params, $route, $handler ) {
@@ -55,6 +75,11 @@ class Router {
 			// Clean parameters
 			//array_shift( $params );
 		}
+		$this->hook( 
+			'RouteFound', 
+			$this, 
+			array( $route, $params )
+		);
 		
 		$handle = new $handler[0](
 				$handler[1],
@@ -63,6 +88,11 @@ class Router {
 				$this->sender
 			);
 		$handle->route( $params );
+		$this->hook( 
+			'RouteSent', 
+			$this, 
+			array( $handle, $this->request, $this->sender )
+		);
 	}
 	
 	/**
