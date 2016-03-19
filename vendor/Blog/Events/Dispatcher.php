@@ -17,6 +17,9 @@ class Dispatcher extends Pluggable {
 		Core\Config $config, 
 		Core\Crypto $crypto
 	) {
+		$this->hook( 
+			'DispatcherInit', $this, $request, $config, $crypto 
+		);
 		$this->request	= $request;
 		$this->config	= $config;
 		$this->crypto	= $crypto;
