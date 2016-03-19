@@ -18,12 +18,6 @@ define( 'CONFIG', <<<JSON
 	"cache_store"		: "sqlite:data\/cache.sqlite",
 	"firewall_store"	: "sqlite:data\/firewall.sqlite",
 	
-	"main_navigation"	: {
-					"Home"		: "\/",
-					"Archive"	: "\/archive",
-					"Account"	: "\/manage/login"
-				},
-	
 	"media_path"		: "|PATH|data\/media\/",
 	"archive_path"		: "|PATH|data\/archive\/",
 	"compiled_tpl_path"	: "|PATH|data\/templates\/",
@@ -38,6 +32,28 @@ define( 'CONFIG', <<<JSON
 	"enable_register"	: true,
 	"enable_login"		: true,
 	"show_fullbody"		: true,
+	
+	"nav_main"		: {
+					"Home"		: "\/",
+					"Archive"	: "\/archive",
+					"Account"	: "\/manage/login"
+				},
+	
+	"nav_manage"		: {
+					"Home"		: "\/",
+					"New"		: "\/manage/new",
+					"Posts"		: "\/manage/posts",
+					"Profile"	: "\/manage/profile",
+					"Logout"	: "\/manage/logout"
+				},
+	
+	"nav_login"		: {
+					"Home"		: "\/",
+					"New"		: "\/manage/new",
+					"Posts"		: "\/manage/posts",
+					"Profile"	: "\/manage/profile",
+					"Account"	: "\/manage/login"
+				},
 	
 	"firewall_ua"		: "|PATH|data\/ua.ini",
 	"firewall_uri"		: "|PATH|data\/uri.ini",
@@ -110,6 +126,16 @@ define( 'CONFIG', <<<JSON
 }
 JSON
 );
+
+\set_include_path( \get_include_path() . PATH_SEPARATOR . PKGS );
+\spl_autoload_extensions( '.php' );
+\spl_autoload_register( function( $class ) {
+	\spl_autoload( str_replace( "\\", "/", $class ) );
+});
+
+
+# Register any plugins 
+# Blog\Events\Pluggable::register( new Blog\Plugins\Example\Plugin() );
 
 
 /*
