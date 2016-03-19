@@ -30,8 +30,7 @@ class Pluggable {
 	
 	/**
 	 * Call hook on any registered plugins. 
-	 * Note: The hook name should be the first argument passed 
-	 * followed by the class instance ($this)
+	 * Note: The hook name should be the first argument passed
 	 * 
 	 * Avoid calling this on parent classes
 	 */
@@ -42,7 +41,6 @@ class Pluggable {
 		
 		$args	= func_get_args();
 		$name	= array_shift( $args );
-		$class	= array_shift( $args );
 		
 		if ( !isset( static::$plugins ) ) {
 			static::$plugins = new \SplObjectStorage();
@@ -50,7 +48,9 @@ class Pluggable {
 		}
 		
 		foreach( static::plugins as $plugin ) {
-			$plugin->{$name}( $class, $args );
+			call_user_func_array( 
+				array( $plugin, $name ), $args 
+			);
 		}
 	}
 }
