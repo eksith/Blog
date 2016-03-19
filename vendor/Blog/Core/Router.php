@@ -46,7 +46,10 @@ class Router extends Events\Pluggable {
 			$this->hook( 
 				'RouteVerbMissing', 
 				$this, 
-				array( static::$routes, $verb, $markers );
+				static::$routes,
+				$markers, 
+				$verb 
+			);
 			return;
 		}
 		
@@ -66,9 +69,7 @@ class Router extends Events\Pluggable {
 		
 		if ( !$found ) {
 			$this->hook( 
-				'RouteNotFound', 
-				$this, 
-				array( $route, $params )
+				'RouteNotFound', $this, $params, $route
 			);
 		}
 	}
@@ -82,8 +83,10 @@ class Router extends Events\Pluggable {
 		}
 		$this->hook( 
 			'RouteFound', 
-			$this, 
-			array( $route, $params )
+			$this,  
+			$params,
+			$route, 
+			$handler
 		);
 		
 		$handle = new $handler[0](
@@ -92,11 +95,13 @@ class Router extends Events\Pluggable {
 				$this->request,
 				$this->sender
 			);
+		
+		$this->hook( 
+			'RouteInit', $this, $handle
+		);
 		$handle->route( $params );
 		$this->hook( 
-			'RouteSent', 
-			$this, 
-			array( $handle, $this->request, $this->sender )
+			'RouteSent', $this, $handle
 		);
 	}
 	
