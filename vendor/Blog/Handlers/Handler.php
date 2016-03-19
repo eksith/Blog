@@ -200,6 +200,14 @@ class Handler extends Events\Listener {
 			$code = 302;
 		}
 		
+		$this->hook( 
+			'RouteRedirect', 
+			$this, 
+			$base, 
+			$code, 
+			$status 
+		);
+		
 		header( "Location: $base/$path", true, $code );
 		$this->finish();
 	}
