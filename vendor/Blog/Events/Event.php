@@ -2,7 +2,7 @@
 
 namespace Blog\Events;
 
-class Event implements \SplSubject {
+class Event extends Pluggable implements \SplSubject {
 	
 	private $rules;
 	private	$name;
