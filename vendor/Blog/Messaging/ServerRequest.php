@@ -197,7 +197,7 @@ class ServerRequest extends Request
 	private function signature() {
 		if ( !isset( $this->browser ) ) {
 			$this->browser = 
-				new Core\Security\BrowserProfile();
+				new BrowserProfile();
 		}
 		
 		$this->sig	= $this->browser->getSignature();
