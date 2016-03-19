@@ -134,7 +134,10 @@ JSON
 });
 
 
-# Register any plugins 
+# Register firewall plugin before any others
+Blog\Events\Pluggable::register( new Blog\Plugins\Security\Plugin() );
+
+# Register any extra plugins 
 # Blog\Events\Pluggable::register( new Blog\Plugins\Example\Plugin() );
 
 
