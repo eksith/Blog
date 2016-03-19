@@ -2,7 +2,7 @@
 
 namespace Blog\Events;
 
-class Listener implements \SplObserver {
+class Listener extends Pluggable implements \SplObserver {
 	
 	protected $dispatcher;
 	
