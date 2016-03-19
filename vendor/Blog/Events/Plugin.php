@@ -1,6 +1,10 @@
 <?php
 
 namespace Blog\Events;
+use Blog\Core;
+use Blog\Handlers;
+use Blog\Routes;
+use Blog\Messaging;
 
 /**
  * Plugin/Hook class. All plugins must extend this class
@@ -23,45 +27,90 @@ abstract class Plugin {
 	/**
 	 * Configuration class initialized with crypto class and settings
 	 */
-	public abstract function onConfigInit( Pluggable $class, array $args );
+	abstract public function onConfigInit( 
+		Core\Config $config, 
+		Core\Crypto $crypto 
+	);
+	
+	/**
+	 * Event dispatcher initializing
+	 */
+	abstract public function onDispatcherInit( 
+		Dispatcher $sender, 
+		Messaging\ServerRequest $request, 
+		Core\Config $config, 
+		Core\Crypto $crypto
+	);
 	
 	/**
 	 * Navigation route, path, HTTP method verb
 	 */
-	public abstract function onRouteAdded( Pluggable $class, array $args );
-	
-	/**
-	 * Sent route/verb combination missing
-	 */
-	public abstract function onRouteVerbMissing( Events\Pluggable $class, array $args );
-	
-	/**
-	 * Route with matching path/verb found
-	 */
-	public abstract function onRouteFound( Events\Pluggable $class, array $args );
-	
-	/**
-	 * No routes specified for this path
-	 */
-	public abstract function onRouteNotFound( Events\Pluggable $class, array $args );
-	
-	/**
-	 * A route handler has been initialized
-	 */
-	public abstract function onRouteInit( Events\Pluggable $class, array $args );
+	abstract public function onRouteAdded( 
+		Core\Router $router, $path, $route 
+	);
 	
 	/**
 	 * Route parsing has started
 	 */
-	public abstract function onRouting( Events\Pluggable $class, array $args );
+	abstract public function onRouting( 
+		Core\Router $router, 
+		array $routes,
+		array $markers,
+		$verb
+	);
+	
+	/**
+	 * Sent route/verb combination missing
+	 */
+	abstract public function onRouteVerbMissing( 
+		Core\Router $router, 
+		array $routes,
+		array $markers,
+		$verb
+	);
+	
+	/**
+	 * Route with matching path/verb found
+	 */
+	abstract public function onRouteFound( 
+		Core\Router $router, 
+		array $params,
+		$route,
+		$handler
+	);
+	
+	/**
+	 * No routes specified for this path
+	 */
+	abstract public function onRouteNotFound( 
+		Core\Router $router, 
+		array $params,
+		$route 
+	);
+	
+	/**
+	 * A route handler has been initialized
+	 */
+	abstract public function onRouteInit( 
+		Core\Router $router, 
+		Routes\Route $handler
+	);
 	
 	/**
 	 * Route handler created and sent
 	 */
-	public abstract function onRouteSent( Events\Pluggable $class, array $args );
+	abstract public function onRouteSent( 
+		Core\Router $router, 
+		Routes\Route $handler
+	);
 	
 	/**
 	 * Visitor is being sent to another location
 	 */
-	public abstract function onRouteRedirect( Events\Pluggable $class, array $args );
+	abstract public function onRedirect(
+		Handlers\Handler $handler, 
+		$base, 
+		$code, 
+		$status 
+	);
 }
