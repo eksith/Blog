@@ -3,6 +3,7 @@
 # Example routes
 # Change this to suit your own blog structure
 
+
 # Prepare request
 $request	= new Blog\Messaging\ServerRequest();
 
@@ -11,12 +12,6 @@ $crypto		= new Blog\Core\Crypto();
 
 # Prepare configuration
 $config		= new Blog\Core\Config( $crypto );
-
-# Prepare and run firewall
-$firewall	= new Blog\Core\Security\Sensor( 
-			$request, $config, $crypto
-		);
-$firewall->run();
 
 # Event dispatcher
 $sender		= new Blog\Events\Dispatcher(
