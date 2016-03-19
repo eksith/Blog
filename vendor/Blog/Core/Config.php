@@ -1,11 +1,12 @@
 <?php
 
 namespace Blog\Core;
+use Blog\Events;
 
 /**
  * Application configuration
  */
-final class Config {
+final class Config extends Events\Pluggable {
 	
 	private $settings;
 	private $crypto;
@@ -15,6 +16,16 @@ final class Config {
 	public function __construct( Crypto $crypto ) {
 		$this->crypto	= $crypto;
 		$this->settings = $this->loadConfig();
+		
+		$this->hook( 
+			'ConfigInit', 
+			$this, 
+			array( $this->crypto ) 
+		);
+	}
+	
+	public function setSetting( $name, $value ) {
+		$this->settings[$name] = $value;
 	}
 	
 	public function getSetting( $name ) {
@@ -50,7 +61,6 @@ final class Config {
 				true, 
 				self::DECODE_DEPTH 
 			);
-			
 		} else {
 			die( 'Could not load application settings' );
 		}
