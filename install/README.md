@@ -74,26 +74,32 @@ index.php
   | - config.php ( Stores all configuration options and the class loader )
   | - routes.php ( Application URI routes sent to the router )
   |_____
-	| - Blog\Core\Config.php
-	| - Blog\Core\Crypto.php
-	| - Blog\Core\Security\Sensor.php
-	|	| - Blog\Core\Security\IP.php
-	|	| - Blog\Core\Security\BrowserProfile.php
-	|	| - Blog\Models\Model.php
-	|	| 
-	|	| - Blog\Messaging\Immutable.php
-	|	| - Blog\Messaging\Uri.php ( Immutable )
-	|	| - Blog\Messaging\Message.php ( Immutable )
-	|	| - Blog\Messaging\Request.php ( Message )
-	|	| - Blog\Messaging\ServerRequest.php ( Request )
+	| - Blog\Messaging\Immutable.php
+	| - Blog\Messaging\Uri.php ( Immutable )
+	| - Blog\Messaging\Message.php ( Immutable )
+	| - Blog\Messaging\Request.php ( Message )
+	| - Blog\Messaging\BrowserProfile.php
+	| - Blog\Messaging\ServerRequest.php ( Request )
 	| 
-	| - Blog\Core\Router.php
+	| - Blog\Core\Crypto.php
+	| 
+	| - Blog\Events\Pluggable.php
+	| - Blog\Core\Config.php ( Pluggable )
+	| 
+	| - Blog\Events\Plugin.php
+	|	| - Blog\Plugins\Security\Plugin.php ( Plugin )
+	|	| - Blog\Plugins\Security\Sensor.php
+	|	| - Blog\Plugins\Security\IP.php
+	|	| - Blog\Models\Model.php
+	|
+	| 
+	| - Blog\Core\Router.php ( Pluggable )
 		|
 		| - Blog\Routes\Route.php
 		| - Blog\Routes\ContentRoute.php ( Route )
-			| - Blog\Events\Dispatcher.php
-			| - Blog\Events\Event.php ( SplSubject )
-			| - Blog\Events\Listener.php ( SplObserver )
+			| - Blog\Events\Dispatcher.php ( Pluggable )
+			| - Blog\Events\Event.php ( Pluggable, SplSubject )
+			| - Blog\Events\Listener.php ( Pluggable, SplObserver )
 			|
 			| - Blog\Handlers\Handler.php ( Listener )
 			| - Blog\Handlers\Menu.php ( Handler )
