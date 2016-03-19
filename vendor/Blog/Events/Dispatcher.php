@@ -4,7 +4,7 @@ namespace Blog\Events;
 use Blog\Core;
 use Blog\Messaging;
 
-class Dispatcher {
+class Dispatcher extends Pluggable {
 	
 	private static $queue;
 	private $crypto;
@@ -46,7 +46,7 @@ class Dispatcher {
 		return $this->events[$name]->contains( $event );
 	}
 	
-	public function set( $name, $name, $value ) {
+	public function set( $name, $value ) {
 		if ( !$this->has( $name ) ) {
 			return;
 		}
@@ -103,4 +103,3 @@ class Dispatcher {
 		static::$queue->schedule( func_get_args() );
 	}
 }
-
