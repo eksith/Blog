@@ -34,7 +34,7 @@ class Router extends Events\Pluggable {
 	}
 	
 	public function route( array $markers ) {
-		$this->hook( 'Routing', $this, static::$routes );
+		$this->hook( 'Routing', $this, array( static::$routes ) );
 		
 		$verb	= strtolower( $this->request->getMethod() );
 		if ( !isset( self::$routes[$verb] ) ) {
