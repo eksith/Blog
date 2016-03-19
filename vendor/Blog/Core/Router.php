@@ -23,20 +23,25 @@ class Router extends Events\Pluggable {
 		if ( !isset( self::$routes[$verb] ) ) {
 			self::$routes[$verb] = array();
 		}
-		static::$routes[$verb][$this->cleanRoute( $path )] = 
-			$route;
-		
+		$path	= $this->cleanRoute( $path );
 		$this->hook( 
-			'RouteAdded', 
-			$this, 
-			array( static::$routes ) 
+			'RouteAdded', $this, $path, $route
 		);
+		static::$routes[$verb][$path] = $route;
+		
+		
 	}
 	
 	public function route( array $markers ) {
-		$this->hook( 'Routing', $this, array( static::$routes ) );
-		
 		$verb	= strtolower( $this->request->getMethod() );
+		
+		$this->hook( 
+			'Routing', 
+			$this, 
+			static::$routes, 
+			$markers, 
+			$verb
+		);
 		if ( !isset( self::$routes[$verb] ) ) {
 			$this->hook( 
 				'RouteVerbMissing', 
