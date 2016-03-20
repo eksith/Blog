@@ -671,15 +671,16 @@ class View extends Handlers\Handler {
 		$vals	= array_keys( $place );
 		
 		foreach ( $items as $item ) {
-			$var = array();
-			
-			foreach( $vals as $v ) {
-				if ( isset( $item->{$vals[$v]} ) ) {
-					$var[$v] = $item->{$vals[$v]};
+			$vars = array();
+			foreach( $vals as $k => $v ) {
+				if ( is_array( $item->{$v} ) {
+					continue;
 				}
-			}
-			if ( !empty( $var ) ) {
-				$map[] = $var;
+				if ( isset( $item->{$v} ) ) {
+					$map[][$k] = $item->{$v};
+				} else {
+					$map[][$k] = '';
+				}
 			}
 		}
 		
