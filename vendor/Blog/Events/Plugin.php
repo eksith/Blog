@@ -113,4 +113,33 @@ abstract class Plugin {
 		$code, 
 		$status 
 	);
+	
+	/**
+	 * Inside the route, a new handler has been loaded
+	 */
+	abstract public function onHandlerLoaded(
+		Routes\Route $route,
+		Handlers\Handler $handler,
+		Events\Event $event
+	);
+	
+	/**
+	 * Inside the route, a new view has been loaded
+	 */
+	abstract public function onViewLoaded(
+		Routes\Route $route,
+		Views\View $handler,
+		Events\Event $event
+	);
+	
+	/**
+	 * In the view, the template has been rendered with conditions
+	 * and display variables
+	 */
+	abstract public function onViewRendered(
+		Views\View $handler,
+		Events\Event $event,
+		array $conds,
+		array $vars
+	);
 }
