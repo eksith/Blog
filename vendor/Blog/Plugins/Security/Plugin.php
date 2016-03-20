@@ -73,4 +73,23 @@ class Plugin extends Events\Plugin {
 		$code, 
 		$status 
 	) {}
+	
+	public function onHandlerLoaded(
+		Routes\Route $route,
+		Handlers\Handler $handler,
+		Events\Event $event
+	) {}
+	
+	public function onViewLoaded(
+		Routes\Route $route,
+		Views\View $handler,
+		Events\Event $event
+	) {}
+	
+	public function onViewRendered(
+		Views\View $handler,
+		Events\Event $event,
+		array $conds,
+		array $vars
+	) {}
 }
