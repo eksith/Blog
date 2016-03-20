@@ -16,7 +16,6 @@ class Locale extends Views\View {
 		'en-us'	=> 'EnglishUS'
 	);
 	
-	# https://stackoverflow.com/questions/19249159/best-practice-multi-language-website?rq=1
 	public function handleEvent( Events\Event $event ) {
 		$name	= $event->get( 'locale' );
 		if ( empty( $name ) || empty( $this->map[$name] ) ) {
