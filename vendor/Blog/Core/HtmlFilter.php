@@ -2,9 +2,14 @@
 
 namespace Blog\Core;
 
+/**
+ * General purpose HTML filter with a whitelist of tags
+ */
 class HtmlFilter {
 	
-	// Parsedown object
+	/**
+	 * @var object Parsedown Markdown parser
+	 */
 	private $parsedown;
 	
 	/**
