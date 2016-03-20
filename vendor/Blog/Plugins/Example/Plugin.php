@@ -2,6 +2,10 @@
 
 namespace Blog\Plugins\Example;
 use Blog\Events;
+use Blog\Core;
+use Blog\Handlers;
+use Blog\Routes;
+use Blog\Messaging;
 
 /**
  * An example plugin that doesn't really do anything
@@ -72,5 +76,24 @@ class Plugin extends Events\Plugin {
 		$base, 
 		$code, 
 		$status 
+	) {}
+	
+	public function onHandlerLoaded(
+		Routes\Route $route,
+		Handlers\Handler $handler,
+		Events\Event $event
+	) {}
+	
+	public function onViewLoaded(
+		Routes\Route $route,
+		Views\View $handler,
+		Events\Event $event
+	) {}
+	
+	public function onViewRendered(
+		Views\View $handler,
+		Events\Event $event,
+		array $conds,
+		array $vars
 	) {}
 }
