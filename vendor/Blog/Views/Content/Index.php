@@ -26,23 +26,14 @@ class Index extends Views\View {
 			'theme'		=> $this->getThemeDisplay()
 		);
 		
-		$parsed		= array();
 		$posts		= $event->get( 'posts' );
 		$conds		= 
 		array(
 			'post_count'	=> count( $posts )
 		);
 		
-		
-		foreach ( $posts as $post ) {
-			$parsed[$post->id] = array();
-			foreach( $this->post_map as $k => $v ) {
-				if ( is_array( $post->{$v} ) ) {
-					continue;
-				}
-				$parsed[$post->id][$k] = $post->{$v};
-			}
-		}
+		$parsed		= 
+		$this->mapObjToPlace( $this->post_map, $posts );
 		
 		$this->menuBuilder( $event, $conds );
 		$this->addState( 'posts', $parsed );
@@ -51,7 +42,6 @@ class Index extends Views\View {
 	
 	public function archive( Events\Event $event ) {
 		$this->menuBuilder( $event, $conds );
-		
 		echo 'archive view ';
 	}
 	
@@ -60,6 +50,7 @@ class Index extends Views\View {
 			'csrf'		=> $event->get( 'searchpost_csrf' )
 		);
 		
+		$this->menuBuilder( $event, $conds );
 		$event->set( 'search_form', $vars );
 	}
 }
