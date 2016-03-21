@@ -25,6 +25,9 @@ class Auth extends Handlers\Handler  {
 			$event->getRules()
 		);
 		
+		if ( !isset( $_SESSION ) ) {
+			return;
+		}
 		$event->set( 'session_id', $_SESSION['canary']['visit'] );
 		$event->set( 'user_id', 0 );
 	}
@@ -35,6 +38,9 @@ class Auth extends Handlers\Handler  {
 	 * @link https://paragonie.com/blog/2015/04/secure-authentication-php-with-long-term-persistence
 	 */
 	private function authenticate() {
+		if ( !isset( $_SESSION ) ) {
+			return;
+		}
 		if ( empty( $_SESSION['user'] ) ) {
 			$this->auth = $this->getAuthCookie();
 		} else {
