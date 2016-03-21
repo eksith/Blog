@@ -176,6 +176,11 @@ class User extends Model {
 	 * @link https://paragonie.com/blog/2015/04/secure-authentication-php-with-long-term-persistence
 	 */
 	private function password( $password ) {
+		$stored = base64_decode( $stored, true );
+		if ( false === $stored ) {
+			return false;
+		}
+		
 		return 
 		\password_hash(
 			base64_encode(
@@ -190,6 +195,11 @@ class User extends Model {
 	 * Verify user provided password against stored one
 	 */
 	private function verify( $password, $stored ) {
+		$stored = base64_deocode( $stored, true );
+		if ( false === $stored ) {
+			return false;
+		}
+		
 		return 
 		\password_verify(
 			base64_encode( 
