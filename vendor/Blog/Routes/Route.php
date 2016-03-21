@@ -9,7 +9,7 @@ use Blog\Handlers;
 /**
  * Blog route called by the core router 
  */
-class Route {
+class Route extends Events\Pluggable {
 	
 	/**
 	 * @var object Event dispatcher
@@ -64,6 +64,36 @@ class Route {
 	 */
 	public function add( Handlers\Handler $handler ) {
 		$this->event->attach( $handler );
+	}
+	
+	/**
+	 * Add multiple route handlers and trigger HandlerLoaded hook
+	 */
+	public function addHandlers( array $handlers ) {
+		foreach ( $handlers as $handler ) {
+			$this->add( $handler );
+			$this->hook(
+				'HandlerLoaded',
+				$this,
+				$handler,
+				$this->event
+			);
+		}
+	}
+	
+	/**
+	 * Add multiple route views and trigger ViewLoaded hook
+	 */
+	public function addViews( array $views ) {
+		foreach ( $views as $view ) {
+			$this->add( $view );
+			$this->hook(
+				'ViewLoaded',
+				$this,
+				$view,
+				$this->event
+			);
+		}
 	}
 	
 	public function redirect( Events\Dispatcher $sender, $url ) {
