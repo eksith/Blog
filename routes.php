@@ -4,20 +4,6 @@
 # Change this to suit your own blog structure
 
 
-# Prepare request
-$request	= new Blog\Messaging\ServerRequest();
-
-# Prepare crypto
-$crypto		= new Blog\Core\Crypto();
-
-# Prepare configuration
-$config		= new Blog\Core\Config( $crypto );
-
-# Event dispatcher
-$sender		= new Blog\Events\Dispatcher(
-			$request, $config, $crypto
-		);
-
 # Placeholder markers (doubles as variable names passed to routes)
 $markers	= 
 array(
@@ -27,10 +13,10 @@ array(
 	':cat'	=> '(?<cat>[\pL\pN]{3,20})',
 	':user'	=> '(?<user>[\pL\pN\s-]{2,30})',
 	':page'	=> '(?<page>[1-9][0-9]*)',
-	':year'	=> '(?<year>[2][0-9]{4})',
-	':month'=> '(?<month>[0-3][0-9]{2})',
-	':day'	=> '(?<day>[0-9][0-9]{2})',
-	':slug'	=> '(?<slug>[\w]*)',
+	':year'	=> '(?<year>[2][0-9]{3})',
+	':month'=> '(?<month>[0-3][0-9]{1})',
+	':day'	=> '(?<day>[0-9][0-9]{1})',
+	':slug'	=> '(?<slug>[\pL\-\d]*)',
 	':taxo'	=> '(?<taxo>blogs|boards|threads|forumposts|wiki|tags)'
 );
 
