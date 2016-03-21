@@ -3,6 +3,7 @@
 namespace Blog\Events;
 use Blog\Core;
 use Blog\Handlers;
+use Blog\Views;
 use Blog\Routes;
 use Blog\Messaging;
 
@@ -120,7 +121,7 @@ abstract class Plugin {
 	abstract public function onHandlerLoaded(
 		Routes\Route $route,
 		Handlers\Handler $handler,
-		Events\Event $event
+		Event $event
 	);
 	
 	/**
@@ -129,7 +130,7 @@ abstract class Plugin {
 	abstract public function onViewLoaded(
 		Routes\Route $route,
 		Views\View $handler,
-		Events\Event $event
+		Event $event
 	);
 	
 	/**
@@ -138,7 +139,7 @@ abstract class Plugin {
 	 */
 	abstract public function onViewRendered(
 		Views\View $handler,
-		Events\Event $event,
+		Event $event,
 		array $conds,
 		array $vars
 	);
