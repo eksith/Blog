@@ -2,6 +2,7 @@
 
 namespace Blog\Plugins\Security;
 use Blog\Events;
+use Blog\Views;
 use Blog\Core;
 use Blog\Handlers;
 use Blog\Routes;
@@ -11,7 +12,7 @@ class Plugin extends Events\Plugin {
 	
 	private $firewall;
 	
-	public function function onConfigInit( 
+	public function onConfigInit( 
 		Core\Config $config, 
 		Core\Crypto $crypto 
 	) {}
