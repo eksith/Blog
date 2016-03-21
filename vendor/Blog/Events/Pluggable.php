@@ -47,7 +47,7 @@ class Pluggable {
 			return;
 		}
 		
-		foreach( static::plugins as $plugin ) {
+		foreach( static::$plugins as $plugin ) {
 			call_user_func_array( 
 				array( $plugin, $name ), $args 
 			);
