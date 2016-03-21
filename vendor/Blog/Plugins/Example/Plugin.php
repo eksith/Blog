@@ -2,6 +2,7 @@
 
 namespace Blog\Plugins\Example;
 use Blog\Events;
+use Blog\Views;
 use Blog\Core;
 use Blog\Handlers;
 use Blog\Routes;
