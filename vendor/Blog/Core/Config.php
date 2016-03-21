@@ -17,11 +17,7 @@ final class Config extends Events\Pluggable {
 		$this->crypto	= $crypto;
 		$this->settings = $this->loadConfig();
 		
-		$this->hook( 
-			'ConfigInit', 
-			$this, 
-			array( $this->crypto ) 
-		);
+		$this->hook( 'ConfigInit', $this, $crypto );
 	}
 	
 	public function setSetting( $name, $value ) {
