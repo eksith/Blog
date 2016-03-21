@@ -65,8 +65,8 @@ class Model {
 		if ( isset( static::$db[$name] ) ) {
 			return static::$db[$name];
 		}
+		$dsn	= static::$config->getSetting( $name );
 		
-		$name	= static::$config->getSetting( $name );
 		$options		= array(
 			\PDO::ATTR_TIMEOUT		=> 
 			static::$config->getSetting( 'data_timeout' ),
@@ -80,8 +80,8 @@ class Model {
 				\PDO::ERRMODE_EXCEPTION
 		);
 		$type	= self::dbType( $dsn );
-		$dsn	= self::dsn( $name, $username, $password );
-			
+		$dsn	= self::dsn( $dsn, $username, $password );
+		
 		static::$db[$name]	= 
 			new \PDO( $dsn, $username, $password, $options );
 		
@@ -91,6 +91,7 @@ class Model {
 				'PRAGMA journal_mode = WAL;'
 			);
 		}
+		
 		static::$dbType[$name] = $type;
 		return static::$db[$name];
 	}
@@ -347,7 +348,7 @@ class Model {
 		$sql, 
 		$params, 
 		$class		= null,
-		$db		= '' 
+		$db		= 'content_store' 
 	) {
 		$stm	= self::getDb( $db )->prepare( $sql );
 		$stm->execute( $params );
@@ -406,7 +407,7 @@ class Model {
 	protected function replace( 
 		$table, 
 		$params = array(), 
-		$db	= '' 
+		$db	= 'content_store' 
 	) {
 		$sql	= static::replaceSql( $table, $params );
 		$params = static::parseParams( $params );
@@ -432,7 +433,7 @@ class Model {
 	protected function put(
 		$table,
 		$params = array(),
-		$db	= ''
+		$db	= 'content_store'
 	) {
 		$stm	= 
 		self::getDb( $db )->prepare(
@@ -458,7 +459,7 @@ class Model {
 		$table,
 		$id,
 		$params		= array(),
-		$db		= '' 
+		$db		= 'content_store' 
 	) {
 		$stm	= 
 		self::getDb( $db )->prepare(
@@ -540,7 +541,7 @@ class Model {
 		 * No host name with ':' would mean this is a DSN name 
 		 * in php.ini
 		 */
-		if ( false === strrpos( $dsn, ':' ) ) {
+		if ( false === strpos( $dsn, ':' ) ) {
 			/**
 			 * We need get_cfg_var() here because ini_get 
 			 * doesn't work
@@ -585,7 +586,7 @@ class Model {
 			}
 		}
 		
-		return $s;
+		return rtrim( $s, ';' );
 	}
 	
 	/**
