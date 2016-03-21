@@ -3,6 +3,8 @@
 define( 'PATH',			\realpath( \dirname( __FILE__ ) ) . '/' );
 define( 'PKGS',			PATH . 'vendor/' );
 
+
+
 # Use the |PATH| placeholder if the relevant folder/resource 
 # is relative to this config file. It's recommended that the databases 
 # and upload directories be placed outside the web root
@@ -67,6 +69,7 @@ define( 'CONFIG', <<<JSON
 	"data_timeout"		: 10,
 	
 	"date_format"		: "M, d h:i",
+	"date_nice"		: "l, M d, Y",
 	
 	"language_files"	: "|PATH|vendor\/Blog\/Language\/",
 	
@@ -134,6 +137,24 @@ JSON
 });
 
 
+# Prepare crypto
+$crypto		= new Blog\Core\Crypto();
+
+# Prepare configuration
+$config		= new Blog\Core\Config( $crypto );
+
+# Prepare base model
+Blog\Models\Model::setConfig( $config );
+Blog\Models\Model::setCrypto( $crypto );
+
+# Prepare request
+$request	= new Blog\Messaging\ServerRequest();
+
+# Event dispatcher
+$sender		= new Blog\Events\Dispatcher(
+			$request, $config, $crypto
+		);
+
 # Register firewall plugin before any others
 Blog\Events\Pluggable::register( new Blog\Plugins\Security\Plugin() );
 
@@ -141,10 +162,13 @@ Blog\Events\Pluggable::register( new Blog\Plugins\Security\Plugin() );
 # Blog\Events\Pluggable::register( new Blog\Plugins\Example\Plugin() );
 
 
+
 /*
-$session = new BlogSession();
-\session_set_save_handler( $session, true );
-register_shutdown_function( 
-	'session_write_close' 
-);
+
+. ／l、
+（ﾟ､ ｡ ７
+l、ﾞ ~ヽ
+じしf_, )ノ
+
 */
+
