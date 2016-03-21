@@ -90,10 +90,6 @@ class Sensor {
 		$this->method	= 
 			strtolower( $this->request->getMethod() );
 		
-		# Prepare model for future scans
-		Models\Model::setConfig( $config );
-		Models\Model::setCrypto( $crypto );
-		
 		$this->sessionCheck();
 		
 		$this->addMsg( 'Firewall initialized' );
@@ -142,7 +138,7 @@ class Sensor {
 	public function addPort( $port ) {
 		$port = ( int ) $port;
 		if ( $port < 1 || $port > 65535 ) {
-			$this->end( 'Invalid port number' );
+			$this->endf( 'Invalid port number' );
 		}
 		$this->ports[]	= $port;
 		$this->ports	= array_unique( $this->ports );
@@ -169,7 +165,7 @@ class Sensor {
 			
 			foreach ( $pre as $k => $v ) {
 				if ( $this->isearch( $pre, $v ) ) {
-					$this->end( 'Global injection' );
+					$this->endf( 'Global injection' );
 				}
 			}
 		}
@@ -199,14 +195,14 @@ class Sensor {
 		# \x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x53\x89\xe1\xb0\x0b\xcd\x80
 		
 		if ( preg_match( self::BAD_URI_RX, $uri ) ) {
-			$this->end( 'Invalid URI' );
+			$this->endf( 'Invalid URI' );
 		}
 		
 		$this->blacklist( 
 			'firewall_uri',
 			function( $u ) use ( $uri ) {
 				if ( false !== stripos( $uri, $u ) ) {
-					$this->end( 'Invalid URI' );
+					$this->endf( 'Invalid URI' );
 				}
 			}
 		);
@@ -229,7 +225,7 @@ class Sensor {
 			'firewall_ua',
 			function( $u ) use ( $ua ) {
 				if ( false !== stripos( $ua[0], $u ) ) {
-					$this->end( 'Invalid browser' );
+					$this->endf( 'Invalid browser' );
 				}
 			}
 		);
@@ -248,7 +244,7 @@ class Sensor {
 			'firewall_bots',
 			function( $u ) use ( $body ) {
 				if ( false !== stripos( $body, $u ) ) {
-					$this->end( 'Invalid content' );
+					$this->endf( 'Invalid content' );
 				}
 			}
 		);
@@ -267,7 +263,7 @@ class Sensor {
 			$this->addMsg( 'Firewall running locally' );
 		} else {
 			if ( !$this->ip->validateIP( $ip ) ) {
-				$this->end( 'Denied IP' );
+				$this->endf( 'Denied IP' );
 			}
 		}
 		
@@ -279,7 +275,7 @@ class Sensor {
 				$host	= 
 				trim( strtolower( gethostbyaddr( $ip ) ) );
 				if ( !$this->validateHost( $host ) ) {
-					$this->end( 'Denied host' );
+					$this->endf( 'Denied host' );
 				}
 			}
 		} else {
@@ -293,7 +289,7 @@ class Sensor {
 			function( $u ) use ( $ip, $host ) {
 				$len	= mb_strlen( $u, '8bit' );
 				if ( 0 === strncmp( $ip, $u, $len ) ) {
-					$this->end( 'Denied IP' );
+					$this->endf( 'Denied IP' );
 				}
 				
 				if ( empty( $host ) ) {
@@ -301,7 +297,7 @@ class Sensor {
 				}
 				
 				if ( 0 === strncmp( $host, $u, $len ) ) {
-					$this->end( 'Denied host' );
+					$this->endf( 'Denied host' );
 				}
 			}
 		);
@@ -336,7 +332,7 @@ class Sensor {
 			$ip	= '127.0.0.1';
 		} else {
 			if ( !$this->ip->validateIP( $ip ) ) {
-				$this->end( 'Denied IP' );
+				$this->endf( 'Denied IP' );
 			}
 		}
 		$ish	= $this->hostSplit( $ip );	# IP chunks
@@ -359,13 +355,13 @@ class Sensor {
 			trim( strtolower( gethostbyaddr( $ip ) ) );
 			
 			if ( !$this->validateHost( $host ) ) {
-				$this->end( 'Denied host' );
+				$this->endf( 'Denied host' );
 			}
 		}
 		
 		$hsh	= $this->hostSplit( $host );	# Host chunks
 		if( false === $hsh ) {
-			$this->end( 'Denied host' );
+			$this->endf( 'Denied host' );
 		}
 		
 		return $hsh;
@@ -473,7 +469,7 @@ class Sensor {
 	private function checkPort(){
 		$port		= $_SERVER['SERVER_PORT'];
 		if ( !in_array( $port, $this->ports ) ) {
-			$this->end( 'Invalid port' );
+			$this->endf( 'Invalid port' );
 		}
 		$this->addMsg( 'Port check passed' );
 	}
@@ -489,14 +485,14 @@ class Sensor {
 		 * Accept missing. Not acceptable.
 		 */
 		if ( $this->missing( $headers, 'Accept' ) ) {
-			$this->end( 'Invalid header' );
+			$this->endf( 'Invalid header' );
 		}
 		
 		/**
 		 * No UA or it's too short
 		 */
 		if ( $this->missing( $headers, 'User-Agent', 10 ) ) {
-			$this->end( 'Invalid user agent' );
+			$this->endf( 'Invalid user agent' );
 		}
 		
 		/**
@@ -509,7 +505,7 @@ class Sensor {
 			$this->has( $headers, 'User-Agent', 'Windows ME' ) || 
 			$this->has( $headers, 'User-Agent', 'Windows XP' ) 
 		) {
-			$this->end( 'Invalid user agent' );
+			$this->endf( 'Invalid user agent' );
 		}
 		$this->addMsg( 'Header check passed' );
 	}
@@ -529,7 +525,7 @@ class Sensor {
 			$this->addMsg( 'Method check passed' );
 			return;
 		}
-		$this->end( 'Method rejected' );
+		$this->endf( 'Method rejected' );
 	}
 	
 	/**
@@ -575,6 +571,7 @@ class Sensor {
 		}
 		
 		if ( \session_status() != \PHP_SESSION_ACTIVE ) {
+			session_name( 'id' );
 			session_start();
 			$this->addMsg( 'Session started' );
 		}
@@ -614,8 +611,8 @@ class Sensor {
 	 * @link https://paragonie.com/blog/2015/04/fast-track-safe-and-secure-php-sessions
 	 */
 	private function sessionCanary() {
-		$key	= $this->config->getSetting( 'visit_key' );
-		$time	= $this->config->getSetting( 'session_time' );
+		$key	= $this->getSetting( 'visit_key' );
+		$time	= $this->getSetting( 'session_time' );
 		$bytes	= $this->crypto->bytes( $key );
 		
 		$_SESSION['canary'] = array(
@@ -714,7 +711,7 @@ class Sensor {
 	/**
 	 * Skip output and end the script
 	 */
-	private function end( $msg = '' ) {
+	private function endf( $msg = '' ) {
 		$this->cleanGlobals();
 		$this->cleanSession();
 		
