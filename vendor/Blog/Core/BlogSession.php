@@ -6,10 +6,10 @@ final class BlogSession
 	implements \SessionHandlerInterface {
 	
 	private static $crypto;
-	private $auth;
+	private $request;
 	
-	public function __construct( $auth ) {
-		$this->auth = $auth;
+	public function __construct( $request ) {
+		$this->request = $request;
 	}
 	
 	public function open( $path, $name ) {
@@ -28,7 +28,7 @@ final class BlogSession
 			return '';
 		}
 		
-		$session->setKey( $this->auth->getSignature() );
+		$session->setKey( $this->request->getSignature() );
 		return $session->data;
 	}
 	
@@ -36,7 +36,7 @@ final class BlogSession
 		$session	= new Models\Session();
 		$session->id	= $id;
 		$session->data	= $data;
-		$session->setKey( $this->auth->getSignature() );
+		$session->setKey( $this->request->getSignature() );
 		
 		$session->save();
 		return true;
