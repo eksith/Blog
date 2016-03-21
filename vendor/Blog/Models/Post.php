@@ -223,6 +223,7 @@ class Post extends Model {
 		
 		#LFET JOIN posts AS p ON posts.parent_id = p.id 
 		#LFET JOIN posts AS r ON posts.root_id = r.id 
+		# GROUP_CONCAT(parent.parent_id AS bread_id, ',')
 		
 		$params	= array();
 		$sql	= 
@@ -234,15 +235,14 @@ class Post extends Model {
 		posts.reply_count AS reply_count, 
 		posts.reply_at AS reply_at, posts.user_id AS user_id, 
 		COALESCE( u.display, u.username, 'Anonymous' ) AS author,
-		u.username AS username, $fields, 
-		GROUP_CONCAT(parent.parent_id AS bread_id, ',')
+		u.username AS username, $fields
 		
 		FROM posts 
 		JOIN post_family AS parent ON posts.id = parent.child_id 
 		JOIN post_family AS family ON parent.child_id = family.child_id
 		LEFT JOIN posts AS p on parent.parent_id = p.id 
 		
-		LEFT JOIN users AS u ON posts.user_id = u.id";
+		LEFT JOIN users AS u ON posts.user_id = u.id ";
 		
 		if ( $id > 0 ) {
 			$sql .= 'WHERE posts.parent_id = :id ';
