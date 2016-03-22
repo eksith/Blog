@@ -6,15 +6,14 @@ use Blog\Handlers;
 class ContentHandler extends Handlers\Handler {
 	
 	protected function editorStatus( $user_id, $post_user, $event ) {
-		
-		if ( $post_user == $user_id ) {
+		$status	= $event->get( 'user_status' );
+		if ( $post_user == $user_id && $status > -1 ) {
 			return true;
 		}
 		$admin	= $this->getSetting( 'user_status_admin' );
 		$mod	= $this->getSetting( 'user_status_mod' );
-		$status	= $event->get( 'user_status' );
 		
-		return ( $status !==  $admin || $status !== $mod );
+		return ( $status ==  $admin || $status == $mod );
 	}
 	
 	/**
@@ -50,14 +49,14 @@ class ContentHandler extends Handlers\Handler {
 	/**
 	 * Convert a string into a page slug
 	 */
-	public static function slugify( $text ) {
-		$text = preg_replace( '~[^\\pL\d]+~u', ' ', $text );
+	public static function slugify( $title, $text ) {
+		$text = preg_replace( '~[^\\pL\d]+~u', ' ', $title );
 		$text = preg_replace( '/\s+/', '-', trim( $text ) );
 		
 		if ( empty( $text ) ) {
 			return hash( 'md5', $title );
 		}
-		return $text;
+		return strtolower( $text );
 	}
 	
 	/**
@@ -78,7 +77,7 @@ class ContentHandler extends Handlers\Handler {
 			
 		for ( $i = 0; $i < count( $words ); $i++ ) {
 			$w	= $words[$i];
-			// Add if this word's length is less than length
+			# Add if this word's length is less than length
 			if ( $w[1] <= $max ) {
 				$out .= $w[0];
 			}
@@ -86,44 +85,34 @@ class ContentHandler extends Handlers\Handler {
 		
 		$out	= preg_replace( "/\r?\n/", '', $out );
 		
-		// If there's too much overlap
+		# If there's too much overlap
 		if ( mb_strlen( $out ) > $max + 10 ) {
-			$out = self::trimStr( $out, $max );
+			$out = mb_substr( $out, 0, $max );
 		}
 		return $out;
 	}
 	
 	/**
-	 * Twitter style #hashtags link formatting
+	 * Twitter style @reply formatting
 	 */
-	protected static function hashtags( 
+	protected static function atReplies(
 		$body, 
-		$hfx, 
 		$ufx, 
-		&$users	= array(), 
-		&$tags	= array() 
+		&$users	= array()
 	) {
-		$body = 
-		preg_replace_callback( 
-			'/(?:[^-\\/"\':!=a-z0-9_@@]|^|\\:)[##]([\p{L}\p{N}]{1,30})/', 
-			function( $matches ) use ( &$tags, $hfx ) {
-				$tags[] = $matches[1];
+		$body	= 
+		preg_replace_callback(
+			'/@([\p{Pc}\p{N}\p{L}\p{Mn}]{2,30})/u',
+			function( $matches ) use ( &$users, $ufx ) {
+				$users[] = strtolower( $matches[1] );
 				return 
-				"<a href='{$hfx}{$matches[1]}'>{$matches[0]}</a>";
-			}, 
-			$body, 5 
+				"<a href='{$ufx}{$matches[1]}'>@{$matches[0]}</a>";
+			},
+			$body, 5
 		);
 		
-		$body = 
-		preg_replace_callback( 
-			'#(?:[^-\\/"\':!=a-z0-9_@@]|^|\\:)[@@]([\p{L}\p{N}]{2,30})#', 
-			function( $matches ) use ( &$users, $ufx ) {
-				$users[] = $matches[1];
-				return 
-				"<a href='{$ufx}{$matches[1]}'>{$matches[0]}</a>";
-			},
-			$body
-		);
+		$uesrs = array_unique( $users );
+		
 		return $body;
 	}
 	
