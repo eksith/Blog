@@ -58,14 +58,18 @@ class UserRoute extends Route {
 	}
 	
 	private function loginView( $sender ) {
-		$this->add( new Handlers\User\Login( $sender ) );
-		$this->add( new Handlers\User\Register( $sender ) );
-		$this->add( new Handlers\Menu( $sender ) );
+		$this->addHandlers( array(
+			new Handlers\User\Login( $sender ),
+			new Handlers\User\Register( $sender ),
+			new Handlers\Menu( $sender )
+		) );
 		
 		$this->add( new Language\Locale( $sender ) );
-		$this->add( new Views\User\Login( $sender ) );
-		$this->add( new Views\User\Register( $sender ) );
-		$this->add( new Views\User\Manage( $sender ) );
+		$this->addViews( array(
+			new Views\User\Login( $sender ),
+			new Views\User\Register( $sender ),
+			new Views\User\Manage( $sender )
+		) );
 	}
 	
 	private function login( $sender ) {
@@ -73,27 +77,35 @@ class UserRoute extends Route {
 	}
 	
 	private function registering( $sender ) {
-		$this->add( new Handlers\User\Register( $sender ) );
-		$this->add( new Handlers\Menu( $sender ) );
+		$this->addHandlers( array(
+			new Handlers\User\Register( $sender ),
+			new Handlers\Menu( $sender ),
+		) );
 		
 		$this->add( new Language\Locale( $sender ) );
-		$this->add( new Views\User\Register( $sender ) );
-		$this->add( new Views\User\Manage( $sender ) );
+		$this->addViews( array(
+			new Views\User\Register( $sender ),
+			new Views\User\Manage( $sender )
+		) );
 	}
 	
 	private function register( $sender ) {
 		$this->add( new Handlers\User\Register( $sender ) );
 	}
 	
-	private function profileView( $sender ) {
-		$this->add( new Handlers\User\Profile( $sender ) );
-		$this->add( new Handlers\User\ChangePass( $sender ) );
-		$this->add( new Handlers\User\Delete( $sender ) );
-		$this->add( new Handlers\Menu( $sender ) );
+	private function profileView( $sender ) 
+		$this->addHandlers( array(
+			new Handlers\User\Profile( $sender ),
+			new Handlers\User\ChangePass( $sender ),
+			new Handlers\User\Delete( $sender ),
+			new Handlers\Menu( $sender )
+		) );
 		
 		$this->add( new Language\Locale( $sender ) );
-		$this->add( new Views\User\Profile( $sender ) );
-		$this->add( new Views\User\Manage( $sender ) );
+		$this->addViews( array(
+			new Views\User\Profile( $sender ),
+			new Views\User\Manage( $sender )
+		) );
 	}
 	
 	private function profileChanged( $sender ) {
@@ -105,12 +117,16 @@ class UserRoute extends Route {
 	}
 	
 	private function deleteView( $sender ) {
-		$this->add( new Handlers\User\Delete( $sender ) );
-		$this->add( new Handlers\Menu( $sender ) );
+		$this->addHandlers( array(
+			new Handlers\User\Delete( $sender ),
+			new Handlers\Menu( $sender )
+		) );
 		
 		$this->add( new Language\Locale( $sender ) );
-		$this->add( new Views\User\Delete( $sender ) );
-		$this->add( new Views\User\Manage( $sender ) );
+		$this->addViews( array(
+			new Views\User\Delete( $sender ),
+			new Views\User\Manage( $sender )
+		) );
 	}
 	
 	private function delete( $sender ) {
