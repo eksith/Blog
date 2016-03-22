@@ -50,47 +50,72 @@ class ContentRoute extends Route {
 	}
 	
 	private function index( $sender ) {
-		$this->add( new Handlers\Content\Index( $sender ) );
-		$this->add( new Handlers\Menu( $sender ) );
+		$this->addHandlers( array(
+			new Handlers\Content\Index( $sender ),
+			new Handlers\Menu( $sender )
+		) );
 		
 		$this->add( new Language\Locale( $sender ) );
-		$this->add( new Views\Content\Index( $sender ) );
+		
+		$this->addViews( array(
+			new Views\Content\Index( $sender )
+		) );
 	}
 	
 	private function archive( $sender ) {
-		$this->add( new Handlers\Content\Index( $sender ) );
-		$this->add( new Handlers\Menu( $sender ) );
+		$this->addHandlers( array(
+			new Handlers\Content\Index( $sender ),
+			new Handlers\Menu( $sender )
+		) );
 		
 		$this->add( new Language\Locale( $sender ) );
-		$this->add( new Views\Content\Index( $sender ) );
-		$this->add( new Views\Content\Front( $sender ) );
+		
+		$this->addViews( array(
+			new Views\Content\Index( $sender ),
+			new Views\Content\Front( $sender )
+		) );
 	}
 	
 	private function read( $sender ) {
-		$this->add( new Handlers\Content\Read( $sender ) );
-		$this->add( new Handlers\Menu( $sender ) );
+		$this->addHandlers( array(
+			new Handlers\Content\Read( $sender );
+			new Handlers\Menu( $sender );
+		) );
 		
 		$this->add( new Language\Locale( $sender ) );
-		$this->add( new Views\Content\Read( $sender ) );
-		$this->add( new Views\Content\Front( $sender ) );
+		
+		$this->addViews( array(
+			new Views\Content\Read( $sender ),
+			new Views\Content\Front( $sender ),
+		) );
 	}
 	
 	private function posts( $sender ) {
-		$this->add( new Handlers\Content\Index( $sender ) );
-		$this->add( new Handlers\Menu( $sender ) );
+		$this->addHandlers( array(
+			new Handlers\Content\Index( $sender ),
+			new Handlers\Menu( $sender )
+		) );
 		
 		$this->add( new Language\Locale( $sender ) );
-		$this->add( new Views\Content\Index( $sender ) );
-		$this->add( new Views\Content\Manage( $sender ) );
+		
+		$this->addViews( array(
+			new Views\Content\Index( $sender ),
+			new Views\Content\Manage( $sender )
+		) );
 	}
 	
 	private function creating( $sender ) {
-		$this->add( new Handlers\Content\Create( $sender ) );
-		$this->add( new Handlers\Menu( $sender ) );
+		$this->addHandlers( array(
+			new Handlers\Content\Create( $sender ),
+			new Handlers\Menu( $sender )
+		) );
 		
 		$this->add( new Language\Locale( $sender ) );
-		$this->add( new Views\Content\Create( $sender ) );
-		$this->add( new Views\Content\Manage( $sender ) );
+		
+		$this->addViews( array(
+			new Views\Content\Create( $sender ),
+			new Views\Content\Manage( $sender )
+		) );
 	}
 	
 	private function create( $sender ) {
@@ -98,12 +123,17 @@ class ContentRoute extends Route {
 	}
 	
 	private function editing( $sender ) {
-		$this->add( new Handlers\Content\Edit( $sender ) );
-		$this->add( new Handlers\Menu( $sender ) );
+		$this->addHandlers( array(
+			new Handlers\Content\Edit( $sender ),
+			new Handlers\Menu( $sender )
+		) );
 		
 		$this->add( new Language\Locale( $sender ) );
-		$this->add( new Views\Content\Edit( $sender ) );
-		$this->add( new Views\Content\Manage( $sender ) );
+		
+		$this->addViews( array(
+			new Views\Content\Edit( $sender ),
+			new Views\Content\Manage( $sender )
+		) );
 	}
 	
 	private function edit( $sender ) {
@@ -111,12 +141,17 @@ class ContentRoute extends Route {
 	}
 	
 	private function deleting( $sender ) {
-		$this->add( new Handlers\Content\Delete( $sender ) );
-		$this->add( new Handlers\Menu( $sender ) );
+		$this->addHandlers( array(
+			new Handlers\Content\Delete( $sender ),
+			new Handlers\Menu( $sender )
+		) );
 		
 		$this->add( new Language\Locale( $sender ) );
-		$this->add( new Views\Content\Delete( $sender ) );
-		$this->add( new Views\Content\Manage( $sender ) );
+		
+		$this->addViews( array(
+			new Views\Content\Delete( $sender ),
+			new Views\Content\Manage( $sender )
+		) );
 	}
 	
 	private function delete( $sender ) {
