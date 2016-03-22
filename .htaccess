@@ -1,6 +1,6 @@
 Options +FollowSymLinks
 
-<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|inc|bak|sqlite|sqlite3)$">
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|inc|bak|sqlite|sqlite3|conf|data|post)$">
 Order Allow,Deny
 Deny from all
 </FilesMatch>
