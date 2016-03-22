@@ -24,6 +24,8 @@ define( 'CONFIG', <<<JSON
 	"archive_path"		: "|PATH|data\/archive\/",
 	"compiled_tpl_path"	: "|PATH|data\/templates\/",
 	
+	"timezone"		: "America\/New_York",
+	
 	"theme_default"		: "default",
 	"theme_admin"		: "admin",
 	"theme_path"		: "|PATH|themes\/",
