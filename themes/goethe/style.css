@@ -1,6 +1,10 @@
 @import url( normalize.css );
 @import url(https://fonts.googleapis.com/css?family=Merriweather);
 @import url(https://fonts.googleapis.com/css?family=Bitter);
+/**
+ * Goethe theme
+ * Copyright (c) 2016 Eksith Rodrigo
+ */
 body {
 	font:			400 1em 'Merriweather', Georgia, serif;
 	font-smoothing:		antialiased;
@@ -47,9 +51,16 @@ header {
 	margin:			2em auto 1em auto;
 	text-align:		center;
 }
+article {
+	padding-bottom:		2em;
+}
 footer {
 	margin:			1em auto;
+	clear:			both;
+	text-align:		center;
+	font-size:		.8em;
 }
+
 .post blockquote {
 	width:			90%;
 	max-width:		600px;
@@ -97,7 +108,7 @@ nav ul {
 }
 
 nav ul li {
-	display: inline-block;
+	display:		inline-block;
 }
 nav ul li {
 	border: 		1px solid #c17753;
@@ -113,6 +124,54 @@ nav ul li a {
 	padding:		0 1em;
 	text-decoration:	none;
 	font-weight:		600;
+}
+
+nav.nextprev {
+	margin:			1em auto;
+	display:		block;
+	height:			3em;
+	font-size:		.8em;
+}
+nav.nextprev ul {
+	padding:		0;
+}
+nav.nextprev ul li {
+	border:			0;
+	margin:			0;
+	padding:		0;
+}
+
+nav.nextprev ul li:first-child {
+	float:			left;
+}
+nav.nextprev ul li:first-child a:before {
+	content:		'\276e';
+	padding-right:		1em;
+}
+
+nav.nextprev ul li:last-child {
+	float:			right;
+}
+
+nav.nextprev ul li:last-child a:before {
+	content:		'';
+	padding:		0;
+}
+nav.nextprev ul li:last-child a:after {
+	content:		'\276f';
+	padding-left:		1em;
+}
+
+nav.nextprev ul li a {
+	padding:		0;
+}
+hr {
+	height:			0;
+	border:			0;
+	padding:		0;
+	border-bottom:		1px solid #b05f3c;
+	clear:			both;
+	margin:			2em 0;
 }
 .mark {
 	text-align:		center;
@@ -163,9 +222,13 @@ input, textarea {
 	padding:		.5em;
 	color:			#555;
 }
-input[type='text'], input[type='password'], input[type='email'], textarea {
+input[type='text'], input[type='password'], input[type='email'], 
+input[type='number'], textarea {
 	background:		#fff;
 	border:			1px solid #555;
+}
+input.sm {
+	width:			200px;
 }
 input[type='submit'], input[type='button'], .btn {
 	font:			600 1.1em 'Bitter', Georgia, serif;
@@ -178,6 +241,16 @@ input[type='submit'], input[type='button'], .btn {
 textarea {
 	width:			100%;
 }
+
+label.file {
+	position:		relative;
+}
+
+label.file input {
+	position:		absolute;
+	display:		none;
+}
+
 @media screen and ( max-width: 640px ) {
 	article, .post, .block {
 		margin:			0 1em;
@@ -185,8 +258,19 @@ textarea {
 	.mark:before, .mark:after, legend:before, legend:after {
 		width:			20%;
 	}
+	
+	nav.nextprev ul li, 
+	nav.nextprev ul li:first-child, 
+	nav.nextprev ul li:last-child {
+		float:			none;
+		display:		block;
+		margin:			1em 0;
+	}
 }
 @media screen and ( max-width: 400px ) {
+	label {
+		display:		block;
+	}
 	input[type='text'], input[type='password'], input[type='email'], 
 	textarea {
 		display:		block;
