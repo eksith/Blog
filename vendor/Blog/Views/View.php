@@ -208,52 +208,13 @@ class View extends Handlers\Handler {
 	}
 	
 	/**
-	 * Replace a DOMNode with its contents
-	 */
-	protected function swapNode( $node, $dom ) {
-		$html	= $this->innerHTML( $node );
-		$d	= $this->newDom();
-		$this->loadDom( $html, $d );
-			
-		$cn	= $d->firstChild;
-		$cn	= $dom->importNode( $cn, true );
-		$node->parentNode->replaceChild( $cn, $node );
-	}
-	
-	protected function buildNodes( $node, \DOMNode $out ) {
-		if ( !$node->hasChildNodes() ) { return; }
-		$children	= $node->childNodes;
-		
-		foreach( $children as $c ) {
-			if ( $c->nodeType == \XML_ELEMENT_NODE ) {
-				$create = 
-				$out->ownerDocument->createElement( 
-					$c->nodeName 
-				);
-				if ( $node->hasAttributes() ) {
-				//	$this->copyAttributes( $c, $create );
-				}
-				$out->appendChild( $create );
-				$this->buildNodes( $node, $create );
-			}
-		}
-	}
-	
-	protected function copyAttributes( $node, \DOMNode $out ) {
-		foreach ( 
-			\iterator_to_array( $node->attributes ) as $at
-		) {
-			$n = $at->nodeName;
-			$v = $at->nodeValue;
-			$out->setAttribute( $n, $v );
-		}
-	}
-	
-	/**
 	 * Gets the inner HTML of an element including any child nodes
 	 */
 	protected function innerHTML( &$node ) {
 		if ( !$node->hasChildNodes() ) { return ''; }
+		if ( empty( $node->nodeValue ) ) {
+			return '';
+		}
 		
 		$html		= '';
 		$children	= $node->childNodes;
@@ -329,7 +290,8 @@ class View extends Handlers\Handler {
 	protected function processIfs( $conds, $node, &$dom ) {
 		$r = $node->getAttribute( 'rel' );
 		if ( $this->matchCondition( $r, $conds ) ) {
-			$this->swapNode( $node, $dom );
+			$tpl	= $this->innerHTML( $node );
+			$this->swapHTML( $tpl, $node, $dom );
 			return;
 		}
 		$node->parentNode->removeChild( $node );
@@ -421,9 +383,12 @@ class View extends Handlers\Handler {
 		$this->swapHTML( $html, $node, $dom );
 		
 		$seps = $node->getElementsByTagName( 'separator' );
-		if ( count( $seps ) ) {
-			$last = $seps->item(0);
-			$this->deleteNodes( $last );
+		
+		if ( $c = count( $seps ) ) {
+			$last = $seps->item( $c - 1 );
+			if ( !empty( $last ) ) {
+				$last->parentNode->removeChild( $last );
+			}
 		}
 	}
 	
@@ -436,10 +401,8 @@ class View extends Handlers\Handler {
 		if ( empty( $tpl ) ) {
 			$node->parentNode->removeChild( $node );
 		} else {
-			$this->swapNode( 
-				$node->getElementsByTagName( 'empty' )->item(0), 
-				$dom 
-			);
+			$this->swapHTML( $tpl, $node, $dom );
+			return;
 		}
 	}
 	
@@ -668,22 +631,15 @@ class View extends Handlers\Handler {
 		array $place 
 	) {
 		$map	= array();
-		$vals	= array_keys( $place );
-		
 		foreach ( $items as $item ) {
-			$vars = array();
-			foreach( $vals as $k => $v ) {
-				if ( is_array( $item->{$v} ) {
+			$map[$item->id] = array();
+			foreach( $place as $k => $v ) {
+				if ( is_array( $item->{$v} ) ) {
 					continue;
 				}
-				if ( isset( $item->{$v} ) ) {
-					$map[][$k] = $item->{$v};
-				} else {
-					$map[][$k] = '';
-				}
+				$map[$item->id][$k] = $item->{$v};
 			}
 		}
-		
 		return $map;
 	}
 	
