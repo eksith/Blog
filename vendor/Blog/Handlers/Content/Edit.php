@@ -17,7 +17,6 @@ class Edit extends ContentHandler {
 		'status'	=> 
 			array(
 				'filter'	=> \FILTER_VALIDATE_INT,
-				'flags'		=> \FILTER_REQUIRE_ARRAY,
 				'options'	=> 
 				array(
 					'default'	=> -1,
