@@ -8,7 +8,6 @@ final class Crypto {
 	
 	const BLOCK_SIZE	= 32;
 	const KEY_SIZE		= 32;
-	const RANDOM_TRIES	= 128;
 	const MERGE_HASH	= 'sha256';
 	const OSSL_IV_SIZE	= 'aes-256-cbc';
 	const PBK_DELIMETER	= '$';		# Don't use a comma
@@ -179,37 +178,6 @@ final class Crypto {
 	}
 	
 	
-	private function pbk( $algo, $txt, $salt, $rounds, $kl ) {
-		if ( function_exists( 'hash_pbkdf2' ) ) {
-			return \hash_pbkdf2( 
-				$algo, $txt, $salt, $rounds, $kl 
-			);
-		}
-		$hl	= strlen( hash( $algo, '', true ) );
-		$bl	= ceil( $kl / $hl );
-		$out	= '';
-		
-		for ( $i = 1; $i <= $bl; $i++ ) {
-			$l = $salt . pack( 'N', $i );
-			$l = $x = hash_hmac( $algo, $l, $txt, true );
-			for ( $j = 1; $l < $rounds; $j++ ) {
-				$x ^= ( $l = 
-				hash_hmac( $algo, $l, $txt, true ) );
-			}
-			$out .= $x;
-		}
-		
-		return bin2hex( substr( $out, 0, $kl ) );
-	}
-	
-	public function equals( $str1, $str2 ) {
-		if ( function_exists( 'hash_equals' ) ) {
-			return \hash_equals( $str1, $str2 );
-		}
-		return 
-		substr_count( $str1 ^ $str2, "\0" ) * 2 === strlen( $str1 . $str2 );
-	}
-	
 	public function genPbk(
 		$algo	= 'tiger160,4', 
 		$txt,
@@ -220,9 +188,9 @@ final class Crypto {
 		$rounds	= ( $rounds <= 0 ) ? 1000 : $rounds;
 		$kl	= ( $kl <= 0 ) ? 128 : $kl;
 		$salt	= empty( $salt ) ? 
-				bin2hex( $this->bytes( 8, 2 ) ) : $salt;
+				bin2hex( $this->bytes( 8 ) ) : $salt;
 		
-		$key	= $this->pbk( $algo, $txt, $salt, $rounds, $kl );
+		$key	= \hash_pbkdf2( $algo, $txt, $salt, $rounds, $kl );
 		$out	= array(
 				$algo, $salt, $rounds, $kl, $key
 			);
@@ -259,23 +227,11 @@ final class Crypto {
 				( int ) $k[3] 
 			);
 		
-		return $this->equals( $this->cleanPbk( $k[4] ),  $pbk );
+		return \hash_equals( $this->cleanPbk( $k[4] ),  $pbk );
 	}
 	
 	private function cleanPbk( $hash ) {
 		return preg_replace( self::PBK_REGEX, '', $hash );
-	}
-	
-	private function rbytes( $size ) {
-		if ( isset( static::$rstate ) ) {
-			static::$rstate	= 
-			$this->merge ( 
-				static::$rstate, 
-				\random_bytes( $size )
-			);
-		} else {
-			static::$rstate	= \random_bytes( $size );
-		}
 	}
 	
 	private function ossl( $size ) {
@@ -285,20 +241,6 @@ final class Crypto {
 			static::$rstate, 
 			\openssl_random_pseudo_bytes( $size, $strong ) 
 		);
-	}
-	
-	private function mrand( $size, $src ) {
-		if ( isset( static::$rstate ) ) {
-			static::$rstate	= 
-			$this->merge ( 
-				static::$rstate, 
-				\mcrypt_create_iv( $size, $src )
-			);
-		} else {
-			static::$rstate	= 
-			\mcrypt_create_iv( $size, $src );
-		}
-	
 	}
 	
 	private function frand( $size, $src ) {
@@ -326,78 +268,18 @@ final class Crypto {
 		return $num;
 	}
 	
-	/**
-	 * @link https://paragonie.com/blog/2015/07/how-safely-generate-random-strings-and-integers-in-php
-	 */
-	public function number( $min, $max, $level = 0 ) {
-		$num = 0;
-		if ( $level <= 0 ) {
-			return $this->rnum( $min, $max );
-		}
-		
-		if ( function_exists( 'random_int' ) ) {
-			return \random_int( $min, $max );
-		}
-		
-		$mask	= 0;
-		$bits	= 0;
-		$bytes	= 0;
-		$shift	= 0;
-		$tries	= 0;
-		$range	= $max - $min;
-		
-		while( $range > 0 ) {
-			if ( $bits % 8 === 0 ) {
-				++$bytes;
-			}
-			++$bits;
-			$range >>= 1;
-			$mask	= $mask << 1 | 1;
-			
-		}
-		
-		$shift	= $min;
-		do {
-			if ( $tries > self::RANDOM_TRIES ) {
-				die( 'Crypto error: Random integer' );
-			}
-			
-			$rnd	= $this->bytes( $bytes, $level );
-			if ( $rnd === false ) {
-				die( 'Crypto error: Random bytes' );
-			}
-			
-			$num	= 0;
-			for( $i = 0; $i < $bytes; ++$i ) {
-				$num |= ord( $rnd[$i] ) << ( $i * 8 );
-			}
-			
-			$num	&= $mask;
-			$num	+= $shift;
-			++$tries;
-			
-		} while ( 
-			$num < $min || 
-			$num > $max || 
-			!is_int( $num ) 
-		);
-		
-		return $num;
-	}
-	
 	public function random( $level = 0 ) {
-		if ( function_exists( 'random_bytes' ) ) {
-			$this->rbytes( self::BLOCK_SIZE );
-			
-		} elseif ( function_exists( 'mcrypt_create_iv' ) ) {
-			$this->mrand( 
-				self::BLOCK_SIZE, \MCRYPT_DEV_URANDOM 
+		if ( isset( static::$rstate ) ) {
+			static::$rstate	= 
+			$this->merge ( 
+				static::$rstate, 
+				\random_bytes( self::BLOCK_SIZE );
 			);
 		} else {
-			$this->frand( 
-				self::BLOCK_SIZE, '/dev/urandom' 
-			);
+			static::$rstate	= 
+			\random_bytes( self::BLOCK_SIZE );
 		}
+		
 		
 		if ( $level <= 0 ) {
 			return static::$rstate;
