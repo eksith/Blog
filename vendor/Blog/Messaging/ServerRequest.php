@@ -17,6 +17,10 @@ class ServerRequest extends Request
 	
 	private $files;
 	
+	private $cookie;
+	
+	private $params;
+	
 	public function __construct(
 		$method		= null,
 		$uri		= null,
@@ -35,6 +39,7 @@ class ServerRequest extends Request
 		if ( empty( $method ) ) {
 			$method		= $_SERVER['REQUEST_METHOD'];
 		}
+		
 		if ( empty( $protocol ) ) {
 			$protocol	= $_SERVER['SERVER_PROTOCOL'];
 		}
@@ -46,6 +51,8 @@ class ServerRequest extends Request
 			$headers,
 			$protocol
 		);
+		$this->params = $_GET;
+		$this->cookie = $_COOKIE;
 	}
 	
 	public function getServerParams() {
@@ -53,19 +60,21 @@ class ServerRequest extends Request
 	}
 	
 	public function getCookieParams() {
-		# TODO
+		return $this->cookie;
 	}
 	
-	public function withCookieParams( array $cookies ) {
-		# TODO
+	public function withCookieParams( array $cookie ) {
+		return 
+		static::immu( $this, 'cookies', $cookie );
 	}
 	
 	public function getQueryParams() {
-		# TODO
+		return $this->params;
 	}
 	
 	public function withQueryParams( array $query ) {
-		# TODO
+		return 
+		static::immu( $this, 'params', $query );
 	}
 	
 	public function getUploadedFiles() {
@@ -90,6 +99,7 @@ class ServerRequest extends Request
 		if ( isset( $this->parsed_body) ) {
 			return $this->parsed_body;
 		}
+		
 		return null;
 	}
 	
@@ -114,12 +124,23 @@ class ServerRequest extends Request
 		# TODO
 	}
 	
-	# https://secure.php.net/manual/en/wrappers.php.php
 	# https://www.w3.org/TR/html401/interact/forms.html#h-17.13.4
 	# https://secure.php.net/manual/en/wrappers.php
 	# Detect content type and parse as application/x-www-form-urlencoded or multipart/form-data
 	public function getBodyWithFilter( $filter ) {
 		# TODO 
+	}
+	
+	public function getPostWithFilter( $filter ) {
+		return \filter_input_array( \INPUT_POST, $filter );
+	}
+	
+	public function getParamsWithFilter( $filter ) {
+		return \filter_input_array( \INPUT_GET, $filter );
+	}
+	
+	public function getCookieWithFilter( $filter ) {
+		return \filter_input_array( \INPUT_COOKIE, $filter );
 	}
 	
 	public function getSignature( $raw = false ) {
@@ -133,7 +154,7 @@ class ServerRequest extends Request
 		return $this->browser;
 	}
 	
-	private function filesPut() {
+	private function filesFromPut() {
 		$data	= $this->getBody();
 		
 		if ( empty( $data ) ) {
@@ -147,34 +168,53 @@ class ServerRequest extends Request
 	# https://php.net/manual/en/features.file-upload.php#114004
 	# https://php.net/manual/en/features.file-upload.post-method.php#118858
 	private function filesFromArray() {
-		$files = array();
+		$files = $this->parseUploads();
 		
-		foreach ( $_FILES as $label => $upload ) {
-			if ( !is_array( $upload['name'] ) ) {
-				$files[$label][] = 
-				new UploadFile(
-					$label,
-					$upload['type'],
-					$upload['tmp_name'],
+		if ( empty( $files ) ) {
+			return array();
+		}
 		
-			$upload['size'],
-					$upload['error']
-				);
-				continue;
-			}
-			
-			foreach ( $upload['name'] as $param => $value ) {
-				$files[$label][$param] = 
-				new UploadedFile(
-					$label,
-					$upload['type'][$param],
-					$upload['tmp_name'][$param],
-					$upload['size'][$param],
-					$upload['error'][$param]
-				);
+		$parsed = array();
+		
+		foreach( $files as $k => $v  ) {
+			$parsed[$k] = array();
+			foreach( $v as $file ) {
+				$parsed[$k][] = 
+					new UploadedFile(
+						$file['name'],
+						$file['type'],
+						$file['tmp_name'],
+						$file['size'],
+						$file['error']
+					);
 			}
 		}
 		
+		return $parsed;
+	}
+	
+	/** 
+	 * Return uploaded $_FILES array into a more sane format
+	 * 
+	 * https://secure.php.net/manual/en/features.file-upload.multiple.php
+	 */
+	private function parseUploads() {
+		$files = array();
+		
+		foreach( $_FILES as $name => $file ) {
+			if ( is_array($file['name']) ) {
+				foreach ( $file['name'] as $n => $f ) {
+					$files[$name][$n] = array();
+					
+					foreach( $file as $k => $v ) {
+						$files[$name][$n][$k] = 
+							$file[$k][$n];
+					}
+				}
+			} else {
+				$files[$name][] = $file;
+			}
+		}
 		return $files;
 	}
 	
