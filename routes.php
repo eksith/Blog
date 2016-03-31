@@ -99,6 +99,10 @@ $router->add( 'get', 'manage/deleteuser', array( '\\Blog\\Routes\\UserRoute', 'd
 $router->add( 'post', 'manage/deleteuser', array( '\\Blog\\Routes\\UserRoute', 'delete' ) );
 Blog\Routes\Route::addSecureRoute( 'manage/deleteuser' );
 
+# CAPTCHA routes
+$router->add( 'get', 'captcha/:slug', array( '\\Blog\\Routes\\CaptchaRoute', 'generate' ) );
+$router->add( 'post', '*', array( '\\Blog\\Routes\\CaptchaRoute', 'validate' ) );
+
 # Send the route
 $router->route( $markers );
 
