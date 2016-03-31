@@ -32,8 +32,19 @@ class Immutable {
 				);
 		}
 		
-		if ( 0 === strcmp( $value, $class->{$param} ) ) {
-			return $class;
+		if ( is_string( $value ) ) {
+			if ( 0 === strcmp( $value, $class->{$param} ) ) {
+				return $class;
+			}
+		} elseif ( is_array( $value ) ) {
+			$diff = $this->arrayDiff( $value, $class->{$param} );
+			if ( empty( $diff ) ) {
+				return $class;
+			}
+		} else {
+			if ( $value === $class->{$param} ) {
+				return $class;
+			}
 		}
 		
 		$new		= clone $class;
@@ -117,5 +128,34 @@ class Immutable {
 		}
 
 		return "{$msg}\r\n\r\n" . $message->getBody();
+	}
+	
+	protected function arrayDiff( $array1, $array2 ) {
+		$diff = array();
+		
+		if ( empty( $array1 ) && !empty( $array2 ) ) {
+			return $array2;
+		}
+		
+		if ( empty( $array2 ) && !empty( $array1 ) ) {
+			return $array1;
+		}
+		
+		foreach ( $array1 as $k => $v ) {
+			if ( is_array( $v ) ) {
+				if ( !isset( $array2[$k] ) || !is_array( $array2[$k] ) ) {
+					$diff[$k] = $v;
+				} else {
+					$ndiff = $this->arrayDiff( $v, $array2[$k] );
+					if ( !empty( $ndiff ) ) {
+						$diff[$k] = $ndiff;
+					}
+				}
+			} elseif ( !array_key_exists( $k, $array2 ) || $array2[$k] !== $v ) {
+				$diff[$k] = $v;
+			}
+		}
+		
+		return $diff;
 	}
 }
