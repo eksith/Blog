@@ -176,25 +176,19 @@ class User extends Model {
 	 * @link https://paragonie.com/blog/2015/04/secure-authentication-php-with-long-term-persistence
 	 */
 	private function password( $password ) {
-		$stored = base64_decode( $stored, true );
-		if ( false === $stored ) {
-			return false;
-		}
-		
-		return 
+		return base64_encode(
 		\password_hash(
 			base64_encode(
 				hash( 'sha384', $password, true )
 			),
 			\PASSWORD_DEFAULT
-		);
+		) );
 	}
-	
 	
 	/**
 	 * Verify user provided password against stored one
 	 */
-	private function verify( $password, $stored ) {
+	private function verifyPassword( $password, $stored ) {
 		$stored = base64_deocode( $stored, true );
 		if ( false === $stored ) {
 			return false;
@@ -207,5 +201,18 @@ class User extends Model {
 			),
 			$stored
 		);
+	}
+
+	/**
+	 * Checks if the current password needs to be rehashed
+	 */
+	function passNeedsRehash( $stored ) {
+		$stored = base64_decode( $stored, true );
+		if ( false === $stored ) {
+			return false;
+		}
+		
+		return 
+		\password_needs_rehash( $stored, \PASSWORD_DEFAULT );
 	}
 }
