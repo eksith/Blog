@@ -6,6 +6,7 @@ define( 'START',		isset( $_SERVER['REQUEST_TIME'] ) ?
 					microtime( true ) );
 
 # The following files should ideally be placed outside the web root
+require( 'shims.php' );
 require( 'config.php' );
 require( 'routes.php' );
 
