@@ -81,6 +81,14 @@ class HtmlFilter {
 	public function clean( $html, $parse = true ) {
 		
 		$err		= \libxml_use_internal_errors( true );
+	
+		# Remove control chars except linebreaks/tabs etc...
+		$html		= 
+		preg_replace(
+			'/[\x00-\x08\x0B\x0C\x0E-\x1F\x80-\x9F]/u', 
+			'', 
+			$html
+		);
 		if ( $parse ) {
 			$html = $this->getParsedown()->text( $html );
 		}
@@ -88,71 +96,75 @@ class HtmlFilter {
 					$html, 'HTML-ENTITIES', "UTF-8" 
 				);
 		
-		$html		=  $this->tidyup( $html );
+		$html		= tidyup( $html );
+		$dom		= new \DOMDocument();
+		$dom->loadHTML( 
+			$html, 
+			\LIBXML_HTML_NOIMPLIED | \LIBXML_HTML_NODEFDTD | 
+			\LIBXML_NOERROR | \LIBXML_NOWARNING | 
+			\LIBXML_NOXMLDECL | \LIBXML_COMPACT | 
+			\LIBXML_NOCDATA
+		);
 		
-		$old		= new \DOMDocument();
-			$old->loadXML( $html );
+		$domBody	= 
+		$dom->getElementsByTagName( 'body' )->item( 0 );
 		
+		# Iterate through every HTML element 
+		foreach( $domBody->childNodes as $node ) {
+			$this->scrub( $node, $flush );
+		}
 		
-		$oldBody	= 
-			$old->getElementsByTagName( 'body' )->item( 0 );
+		# Remove any tags not found in the whitelist
+		if ( !empty( $flush ) ) {
+			foreach( $flush as $node ) {
+				if ( $node->nodeName == '#text' ) {
+					continue;
+				}
+				# Replace tag has harmless text
+				$safe	= $dom->createTextNode( 
+						$dom->saveHTML( $node )
+					);
+				$node->parentNode
+					->replaceChild( $safe, $node );
+			}
+		}
 		
-		$out		= new \DOMDocument();
-		$outBody	= 
-			$out->appendChild( $out->createElement( 'body' ) );
-		
-		$this->scrub( $oldBody, $outBody );
 		$clean		= '';
-		foreach ( $outBody->childNodes as $node ) {
-			$clean .= $out->saveHTML( $node );
+		foreach ( $domBody->childNodes as $node ) {
+			$clean .= $dom->saveHTML( $node );
 		}
 		
 		\libxml_clear_errors();
 		\libxml_use_internal_errors( $err );
+		
+		# Format any embedded media
+		if ( $parse ) {
+			$clean = $this->embeds( $clean );
+		}
 		return trim( $clean );
 	}
 	
 	
 	/* HTML Filtering */
 	
+	
 	/**
 	 * Scrub each node against white list
 	 */
-	protected function scrub( \DOMNode $old, \DOMNode $out ) {
-		foreach ( $old->childNodes as $node ) {
-			if ( 
-				( $node->nodeType == \XML_ELEMENT_NODE ) && 
-				( isset( $this->white[$node->nodeName] ) )
-			) {
-				if ( $node->nodeName == 'code' ) {
-					$clean = 
-					$out->ownerDocument->createElement( 
-						'code', 
-						$this->entities( $node->textContent )
-					);
-				} else {
-					$clean = 
-					$out->ownerDocument->createElement( 
-						$node->nodeName,
-						$node->textContent
-					);
-				}
-				
-				$this->cleanAttributes( $node, $clean );
-				$out->appendChild( $clean );
-				
+	protected function scrub( \DOMNode $node, &$flush = array() ) {
+		if ( isset( $this->white[$node->nodeName] ) ) {
+			# Clean attributes first
+			$this->cleanAttributes( $node );
+			
+			if ( $node->childNodes ) {
 				# Continue to other tags
-				$this->scrub( $node, $clean );
-				
-			} elseif ( $node->nodeType == \XML_ELEMENT_NODE ) {
-				# This tag isn't on the whitelist
-				# Extract interior. Add as plaintext
-				$text	= 
-				$out->ownerDocument->createTextNode(
-					$this->entities( $node->textContent )
-				);
-				$out->appendChild( $text );
+				foreach ( $node->childNodes as $child ) {
+					$this->scrub( $child, $flush, $white );
+				}
 			}
+		} elseif ( $node->nodeType == \XML_ELEMENT_NODE ) {
+			# This tag isn't on the whitelist
+			$flush[] = $node;
 		}
 	}
 	
@@ -162,14 +174,17 @@ class HtmlFilter {
 	 * @param $node object DOM Node
 	 */
 	protected function cleanAttributes(
-		\DOMNode $node,
-		\DOMNode &$clean
+		\DOMNode $node
 	) {
 		foreach ( 
 			\iterator_to_array( $node->attributes ) as $at
 		) {
 			$n = $at->nodeName;
 			$v = $at->nodeValue;
+			
+			# Default action is to remove attribute
+			# It will only get added if it's safe
+			$node->removeAttributeNode( $at );
 			
 			if ( in_array( $n, $this->white[$node->nodeName] ) ) {
 				switch( $n ) {
@@ -185,7 +200,7 @@ class HtmlFilter {
 						$v = $this->entities( $v );
 				}
 				
-				$clean->setAttribute( $n, $v );
+				$node->setAttribute( $n, $v );
 			}
 		}
 	}
@@ -238,6 +253,9 @@ class HtmlFilter {
 	 * Clean raw HTML against Tidy
 	 */
 	protected function tidyup( $text ) {
+		if ( !function_exists( 'tidy_repair_string' ) ) {
+			return $text;
+		}
 		$opt = array(
 			'bare'				=> 1,
 			'hide-comments' 		=> 1,
@@ -252,5 +270,40 @@ class HtmlFilter {
 		
 		return trim( \tidy_repair_string( $text, $opt ) );
 	}
+	
+	
+	/**
+	 * Embedded Big Brother silo media
+	 */
+	function embeds( $html ) {
+		$filter		= 
+		array(
+			'/\[youtube http(s)?\:\/\/(www)?\.?youtube\.com\/watch\?v=([0-9a-z_]*)\]/is'
+			=> 
+			'<div class="media"><iframe width="560" height="315" src="https://www.youtube.com/embed/$3" frameborder="0" allowfullscreen></iframe></div>',
+			
+			'/\[youtube http(s)?\:\/\/(www)?\.?youtu\.be\/([0-9a-z_]*)\]/is'
+			=> 
+			'<div class="media"><iframe width="560" height="315" src="https://www.youtube.com/embed/$3" frameborder="0" allowfullscreen></iframe></div>',
+			
+			'/\[youtube ([0-9a-z_]*)\]/is'
+			=> 
+			'<div class="media"><iframe width="560" height="315" src="https://www.youtube.com/embed/$1" frameborder="0" allowfullscreen></iframe></div>',
+			
+			'/\[vimeo ([0-9]*)\]/is'
+			=> 
+			'<div class="media"><iframe src="https://player.vimeo.com/video/$1?portrait=0" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>',
+			
+			'/\[vimeo http(s)?\:\/\/(www)?\.?vimeo\.com\/([0-9]*)\]/is'
+			=> 
+			'<div class="media"><iframe src="https://player.vimeo.com/video/$3?portrait=0" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>'
+		);
+		
+		return 
+		preg_replace( 
+			array_keys( $filter ), 
+			array_values( $filter ), 
+			$html 
+		);
+	}
 }
-
