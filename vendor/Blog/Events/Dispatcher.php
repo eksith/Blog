@@ -8,8 +8,16 @@ class Dispatcher extends Pluggable {
 	
 	private static $queue;
 	private $crypto;
+	
+	/**
+	 * @var array List of triggerable events
+	 */
 	private $events		= array();
 	private $config;
+	
+	/**
+	 * @var object Server request
+	 */
 	private $request;
 	
 	public function __construct(
@@ -71,6 +79,9 @@ class Dispatcher extends Pluggable {
 		}
 	}
 	
+	/**
+	 * Attach a event to be triggered
+	 */
 	public function attach( $name, Event $event ) {
 		if ( !isset( $this->events[$name] ) ) {
 			$this->events[$name]	= 
@@ -81,6 +92,9 @@ class Dispatcher extends Pluggable {
 		}
 	}
 	
+	/**
+	 * Remove an event if it is attached
+	 */
 	public function detach( $name, Event $event ) {
 		if ( isset( $this->events[$name] ) ) {
 			if ( $this->has( $name, $event ) ) {
@@ -89,6 +103,9 @@ class Dispatcher extends Pluggable {
 		}
 	}
 	
+	/**
+	 * Dispatch an event to all its handlers
+	 */
 	public function dispatch( $name ) {
 		if ( !isset( $this->events[$name] ) ) {
 			return;
