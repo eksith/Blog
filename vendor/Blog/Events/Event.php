@@ -6,7 +6,10 @@ class Event extends Pluggable implements \SplSubject {
 	
 	private $rules;
 	
-	private $data;
+	/**
+	 * @var array Event data
+	 */
+	private $data		= array();
 	
 	/**
 	 * @var string Triggering event name
