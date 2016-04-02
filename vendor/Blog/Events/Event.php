@@ -5,8 +5,22 @@ namespace Blog\Events;
 class Event extends Pluggable implements \SplSubject {
 	
 	private $rules;
+	
+	private $data;
+	
+	/**
+	 * @var string Triggering event name
+	 */
 	private	$name;
+	
+	/**
+	 * @var object Collection of event handlers
+	 */
 	private $handlers;
+	
+	/**
+	 * @var object Event dispatcher
+	 */
 	private $dispatcher;
 	
 	public function __construct( $name, Dispatcher $dispatcher ) {
@@ -15,20 +29,32 @@ class Event extends Pluggable implements \SplSubject {
 		$this->handlers		= new \SplObjectStorage();
 	}
 	
+	/**
+	 * Return this event's dispatcher
+	 */
 	public function getDispatcher() {
 		return $this->dispatcher;
 	}
 	
+	/**
+	 * Get current dispatcher's request
+	 */
 	public function getRequest() {
 		return $this->dispatcher->getRequest();
 	}
 	
+	/**
+	 * Get current dispatcher's configuration settings
+	 */
 	public function getSetting( $setting ) {
 		return $this->dispatcher
 			->getConfig()
 			->getSetting( $setting );
 	}
 	
+	/**
+	 * Check if a handler has already been attached
+	 */
 	public function has( \SplObserver $handler ) {
 		return $this->handlers->contains( $handler );
 	}
@@ -55,12 +81,18 @@ class Event extends Pluggable implements \SplSubject {
 		return $this->name;
 	}
 	
+	/**
+	 * Attach a listener handler to this event
+	 */
 	public function attach( \SplObserver $handler ) {
 		if ( !$this->has( $handler ) ) {
 			$this->handlers->attach( $handler );
 		}
 	}
 	
+	/**
+	 * Remove a handler from this event if it is attached
+	 */
 	public function detach( \SplObserver $handler ) {
 		if ( $this->has( $handler ) ) {
 			$this->handlers->detach( $handler );
