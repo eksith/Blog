@@ -78,7 +78,7 @@ final class Config extends Events\Pluggable {
 	 */
 	private function loadConfig() {
 		if ( defined( 'CONFIG' ) ) {
-			$file	= loadFile( CONFIG );
+			$file	= $this->loadFile( CONFIG );
 			if ( empty( $file ) ) {
 				die( 'Unable to load configuration' );
 			}
