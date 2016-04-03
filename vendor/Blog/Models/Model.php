@@ -427,16 +427,16 @@ class Model {
 	 * @param string $table Single table name
 	 * @param array $params Matching column names and values
 	 * 			Note: No need to add colons ':'
-	 * @param string $db Optional database name override
+	 * @param string $name Optional database name override
 	 * @return Last inserted ID
 	 */
 	protected function put(
 		$table,
 		$params = array(),
-		$db	= 'content_store'
+		$name	= 'content_store'
 	) {
-		$stm	= 
-		self::getDb( $db )->prepare(
+		$db	= self::getDb( $name );
+		$stm	= $db->prepare(
 			static::insertSql( $table, $params )
 		);
 		
@@ -455,17 +455,17 @@ class Model {
 	 * @param mixed $id Identifier ( table must have 'id' field )
 	 * @param array $params Matching column names and values
 	 * 			Note: No need to add colons ':'
-	 * @param string $db Optional database name override
+	 * @param string $name Optional database name override
 	 * @return Rows affected
 	 */
 	protected function edit(
 		$table,
 		$id,
 		$params		= array(),
-		$db		= 'content_store' 
+		$name		= 'content_store' 
 	) {
-		$stm	= 
-		self::getDb( $db )->prepare(
+		$db	= self::getDb( $name );
+		$stm	= $db->prepare(
 			static::updateSql( $table, $params, 'id = :id' )
 		);
 		
