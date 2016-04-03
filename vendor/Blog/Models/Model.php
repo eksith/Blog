@@ -442,6 +442,9 @@ class Model {
 		
 		$stm->execute( static::parseParams( $params ) );
 		
+		if ( 'postgresql' == static::$dbType[$db] ) {
+			return $db->lastInsertId( 'id' );
+		}
 		return $db->lastInsertId(); 
 	}
 	
