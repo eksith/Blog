@@ -17,7 +17,8 @@ array(
 	':month'=> '(?<month>[0-3][0-9]{1})',
 	':day'	=> '(?<day>[0-9][0-9]{1})',
 	':slug'	=> '(?<slug>[\pL\-\d]*)',
-	':taxo'	=> '(?<taxo>blogs|boards|threads|forumposts|wiki|tags)'
+	':taxo'	=> '(?<taxo>blogs|boards|threads|forumposts|wiki|tags)',
+	':file'	=> '(?<file>[\pL_\-\d\.\s]{1,120})'
 );
 
 # Create router with current request
